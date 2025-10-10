@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/login_email_pw.dart';
+import 'screens/main_navigation.dart';
 
 void main() {
   runApp(const FigmaToCodeApp());
@@ -15,7 +16,9 @@ class FigmaToCodeApp extends StatelessWidget {
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.white,
       ),
-      home: LoginEmailPw(),
+      // TODO: TEMPORARY - Change back to LoginEmailPw() for production
+      home: MainNavigation(initialPage: 0), // 0 = Portfolio tab
+      // home: LoginEmailPw(),
     );
   }
 }

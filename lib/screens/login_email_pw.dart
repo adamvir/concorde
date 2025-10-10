@@ -4,6 +4,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cc_new/screens/login_hiteles_sms.dart';
 
 class LoginEmailPw extends StatefulWidget {
+  const LoginEmailPw({super.key});
+
   @override
   _LoginEmailPwState createState() => _LoginEmailPwState();
 }

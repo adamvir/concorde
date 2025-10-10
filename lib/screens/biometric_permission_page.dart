@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
-import 'package:cc_new/screens/portfolio_page.dart';
+import 'package:cc_new/screens/main_navigation.dart';
 
 class BiometricPermissionPage extends StatelessWidget {
-  const BiometricPermissionPage({Key? key}) : super(key: key);
+  const BiometricPermissionPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -199,19 +199,19 @@ class BiometricPermissionPage extends StatelessWidget {
   }
 
   void _handleEnableBiometric(BuildContext context) {
-    // Save user preference and navigate to portfolio
+    // Save user preference and navigate to main navigation
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => PortfolioPage()),
+      MaterialPageRoute(builder: (context) => MainNavigation()),
       (route) => false,
     );
   }
 
   void _handleSkipBiometric(BuildContext context) {
-    // Navigate to portfolio without biometric
+    // Navigate to main navigation without biometric
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => PortfolioPage()),
+      MaterialPageRoute(builder: (context) => MainNavigation()),
       (route) => false,
     );
   }

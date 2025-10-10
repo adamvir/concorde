@@ -5,7 +5,7 @@ import 'package:cc_new/screens/biometric_permission_page.dart';
 class PinSetupPage extends StatefulWidget {
   final String? initialPin; // Pass the first PIN for confirmation
 
-  const PinSetupPage({Key? key, this.initialPin}) : super(key: key);
+  const PinSetupPage({super.key, this.initialPin});
 
   @override
   _PinSetupPageState createState() => _PinSetupPageState();

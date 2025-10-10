@@ -5,6 +5,8 @@ import 'package:cc_new/screens/phone_number_bottom_sheet.dart';
 import 'package:cc_new/screens/pin_setup_page.dart';
 
 class LoginHitelesTSDefault extends StatefulWidget {
+  const LoginHitelesTSDefault({super.key});
+
   @override
   _LoginHitelesTSDefaultState createState() => _LoginHitelesTSDefaultState();
 }
