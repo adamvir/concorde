@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'portfolio_page.dart';
 import 'kedvencek_page.dart';
@@ -111,6 +112,9 @@ class _MainNavigationState extends State<MainNavigation> {
     return Expanded(
       child: InkWell(
         onTap: () {
+          // Haptic feedback for iOS
+          HapticFeedback.selectionClick();
+
           _pageController.animateToPage(
             index,
             duration: const Duration(milliseconds: 300),

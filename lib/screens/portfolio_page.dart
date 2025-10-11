@@ -4,6 +4,7 @@ import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'eszkozok_page.dart';
 import 'teljesulesek_page.dart';
+import 'megbizasok_page.dart';
 import '../widgets/account_selector_bottom_sheet.dart' as account_chooser;
 import '../state/account_state.dart';
 import '../state/currency_state.dart';
@@ -544,11 +545,28 @@ class _PortfolioContentState extends State<PortfolioContent> {
                         );
                       },
                     ),
-                    _buildNavigationItem(
-                      icon: TablerIcons.file_text,
-                      title: 'Megbízások: Nyitott',
-                      badge: '1',
-                      onTap: () {},
+                    AnimatedBuilder(
+                      animation: _transactionService,
+                      builder: (context, _) {
+                        int unviewedCount = 0;
+                        try {
+                          dynamic service = _transactionService;
+                          unviewedCount = service.unviewedOrderCount as int;
+                        } catch (e) {
+                          // Silently handle
+                        }
+                        return _buildNavigationItem(
+                          icon: TablerIcons.file_text,
+                          title: 'Megbízások: Nyitott',
+                          badge: unviewedCount > 0 ? unviewedCount.toString() : null,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => MegbizasokPage()),
+                            );
+                          },
+                        );
+                      },
                     ),
                   ],
                 ),

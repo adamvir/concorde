@@ -57,12 +57,130 @@ class CompletedTransaction {
 class TransactionService extends ChangeNotifier {
   static final TransactionService _instance = TransactionService._internal();
   factory TransactionService() => _instance;
-  TransactionService._internal();
+  TransactionService._internal() {
+    _initializeMockOrders();
+  }
 
   final MockPortfolioData _portfolioData = MockPortfolioData();
   final List<PendingOrder> _pendingOrders = [];
   final List<CompletedTransaction> _completedTransactions = [];
   final List<Order> _orders = [];
+
+  void _initializeMockOrders() {
+    // Add some mock orders for testing
+    _orders.addAll([
+      // Open order - partially fulfilled
+      Order(
+        id: 'ORD_001',
+        ticker: 'NVDA',
+        stockName: 'NVIDIA Corporation',
+        action: OrderAction.buy,
+        orderedQuantity: 20,
+        fulfilledQuantity: 2,
+        limitPrice: 138.50,
+        currency: 'USD',
+        accountName: 'TBSZ-2024',
+        createdAt: DateTime.now().subtract(Duration(hours: 5, minutes: 26)),
+        expiresAt: DateTime.now().add(Duration(days: 25)),
+        status: OrderStatus.open,
+        isViewed: false,
+      ),
+      // Open order - market price (Piaci)
+      Order(
+        id: 'ORD_002',
+        ticker: 'VODAFONE',
+        stockName: 'Vodafone',
+        action: OrderAction.sell,
+        orderedQuantity: 4440,
+        fulfilledQuantity: 0,
+        limitPrice: null, // Market order
+        currency: 'HUF',
+        accountName: 'TBSZ-2024',
+        createdAt: DateTime(2025, 7, 22),
+        expiresAt: DateTime.now().add(Duration(days: 20)),
+        status: OrderStatus.open,
+        isViewed: false,
+      ),
+      // Open order with limit price
+      Order(
+        id: 'ORD_003',
+        ticker: 'NVDA',
+        stockName: 'NVIDIA Corporation',
+        action: OrderAction.buy,
+        orderedQuantity: 100,
+        fulfilledQuantity: 56,
+        limitPrice: 138.50,
+        currency: 'USD',
+        accountName: 'TBSZ-2024',
+        createdAt: DateTime(2025, 7, 22),
+        expiresAt: DateTime.now().add(Duration(days: 18)),
+        status: OrderStatus.open,
+        isViewed: false,
+      ),
+      // Completed order
+      Order(
+        id: 'ORD_004',
+        ticker: 'NVDA',
+        stockName: 'NVIDIA Corporation',
+        action: OrderAction.buy,
+        orderedQuantity: 20,
+        fulfilledQuantity: 20,
+        limitPrice: 138.50,
+        currency: 'USD',
+        accountName: 'TBSZ-2023',
+        createdAt: DateTime(2025, 6, 19),
+        expiresAt: DateTime.now().add(Duration(days: 10)),
+        status: OrderStatus.completed,
+        isViewed: true,
+      ),
+      // Cancelled order - partially filled
+      Order(
+        id: 'ORD_005',
+        ticker: 'NVDA',
+        stockName: 'NVIDIA Corporation',
+        action: OrderAction.buy,
+        orderedQuantity: 100,
+        fulfilledQuantity: 0,
+        limitPrice: 138.50,
+        currency: 'USD',
+        accountName: 'TBSZ-2024',
+        createdAt: DateTime(2025, 7, 22),
+        status: OrderStatus.cancelled,
+        isViewed: true,
+      ),
+      // Cancelled order - partially filled
+      Order(
+        id: 'ORD_006',
+        ticker: 'NVDA',
+        stockName: 'NVIDIA Corporation',
+        action: OrderAction.buy,
+        orderedQuantity: 100,
+        fulfilledQuantity: 56,
+        limitPrice: 138.50,
+        currency: 'USD',
+        accountName: 'TBSZ-2024',
+        createdAt: DateTime(2025, 7, 22),
+        status: OrderStatus.cancelled,
+        isViewed: true,
+      ),
+      // Expired order
+      Order(
+        id: 'ORD_007',
+        ticker: 'NVDA',
+        stockName: 'NVIDIA Corporation',
+        action: OrderAction.buy,
+        orderedQuantity: 100,
+        fulfilledQuantity: 0,
+        limitPrice: 138.50,
+        currency: 'USD',
+        accountName: 'TBSZ-2024',
+        createdAt: DateTime(2025, 6, 22),
+        expiresAt: DateTime(2025, 7, 22),
+        status: OrderStatus.expired,
+        isViewed: true,
+      ),
+    ]);
+  }
 
   List<PendingOrder> get pendingOrders => List.unmodifiable(_pendingOrders);
   List<CompletedTransaction> get completedTransactions => List.unmodifiable(_completedTransactions);
@@ -427,8 +545,8 @@ class TransactionService extends ChangeNotifier {
     return stock.quantity;
   }
 
-  // Cancel a pending order
-  void cancelOrder(PendingOrder order) {
+  // Cancel a pending order (legacy)
+  void cancelPendingOrder(PendingOrder order) {
     _pendingOrders.remove(order);
   }
 }
