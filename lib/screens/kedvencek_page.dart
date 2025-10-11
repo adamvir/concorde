@@ -1639,108 +1639,369 @@ class _KedvencekContentState extends State<KedvencekContent> {
     required bool isPositive,
     bool isLast = false,
   }) {
-    return GestureDetector(
-      onLongPress: () {
-        // Show delete confirmation
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('Eltávolítás'),
-            content: Text('Biztosan eltávolítod a ${stock.ticker} részvényt a(z) "${_watchlistState.selectedWatchlist?.name}" mappából?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('Mégse'),
-              ),
-              TextButton(
-                onPressed: () {
-                  _watchlistState.removeStockFromCurrentWatchlist(stock.ticker);
-                  Navigator.pop(context);
-                },
-                child: Text('Eltávolítás', style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
-        );
-      },
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ReszvenyInfoPage(
-              stockName: stock.name,
-              ticker: stock.ticker,
-            ),
-          ),
-        );
-      },
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              width: isLast ? 0 : 1,
-              color: const Color(0xFFE2E8F0),
-            ),
-          ),
+    return Dismissible(
+      key: Key(stock.ticker),
+      direction: DismissDirection.endToStart, // Swipe left
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        color: const Color(0xFFEC003F),
+        child: Icon(
+          TablerIcons.trash,
+          color: Colors.white,
+          size: 24,
         ),
-        child: Row(
-          children: [
-            Text(
-              stock.ticker,
-              style: TextStyle(
-                color: const Color(0xFF1D293D),
-                fontSize: 16,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w500,
-              ),
+      ),
+      confirmDismiss: (direction) async {
+        // Haptic feedback
+        HapticFeedback.mediumImpact();
+
+        // Show delete confirmation (Figma style)
+        return await showDialog<bool>(
+          context: context,
+          builder: (context) => Dialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28),
             ),
-            Spacer(),
-            SizedBox(
-              width: 73,
-              child: Text(
-                changePercent,
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  color: isPositive
-                      ? const Color(0xFF007A55)
-                      : const Color(0xFFEC003F),
-                  fontSize: 16,
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w400,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 280, maxWidth: 560),
+              child: Container(
+                width: 312,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    // Content section
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Title
+                          SizedBox(
+                            width: 264,
+                            child: Text(
+                              'Eltávolítás',
+                              style: TextStyle(
+                                color: const Color(0xFF1D293D),
+                                fontSize: 24,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w400,
+                                height: 1.33,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // Message
+                          SizedBox(
+                            width: 264,
+                            child: Text(
+                              'Biztosan eltávolítod a ${stock.name} részvényt a listáról?',
+                              style: TextStyle(
+                                color: const Color(0xFF45556C),
+                                fontSize: 14,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w400,
+                                height: 1.43,
+                                letterSpacing: 0.10,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Actions section
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.only(
+                        top: 20,
+                        left: 16,
+                        right: 24,
+                        bottom: 20,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          // Mégse button
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: TextButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                            ),
+                            child: const Text(
+                              'Mégse',
+                              style: TextStyle(
+                                color: Color(0xFF1D293D),
+                                fontSize: 14,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w500,
+                                height: 1.43,
+                                letterSpacing: 0.10,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Eltávolítás button
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context, true); // Return true to confirm
+                            },
+                            style: TextButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                            ),
+                            child: const Text(
+                              'Eltávolítás',
+                              style: TextStyle(
+                                color: Color(0xFF1D293D),
+                                fontSize: 14,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w500,
+                                height: 1.43,
+                                letterSpacing: 0.10,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            SizedBox(
-              width: 64,
-              child: Text(
-                dailyChange,
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  color: isPositive
-                      ? const Color(0xFF007A55)
-                      : const Color(0xFFEC003F),
-                  fontSize: 16,
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w400,
+          ),
+        ) ?? false; // Return false if dialog dismissed without selection
+      },
+      onDismissed: (direction) {
+        _watchlistState.removeStockFromCurrentWatchlist(stock.ticker);
+      },
+      child: _LongPressableStockRow(
+        onLongPress: () {
+          // Show remove confirmation dialog
+          HapticFeedback.mediumImpact();
+          showDialog(
+            context: context,
+            builder: (context) => Dialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+              ),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 280, maxWidth: 560),
+                child: Container(
+                  width: 312,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // Content section
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Title
+                            SizedBox(
+                              width: 264,
+                              child: Text(
+                                'Eltávolítás',
+                                style: TextStyle(
+                                  color: const Color(0xFF1D293D),
+                                  fontSize: 24,
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w400,
+                                  height: 1.33,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            // Message
+                            SizedBox(
+                              width: 264,
+                              child: Text(
+                                'Biztosan eltávolítod a ${stock.name} részvényt a listáról?',
+                                style: TextStyle(
+                                  color: const Color(0xFF45556C),
+                                  fontSize: 14,
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w400,
+                                  height: 1.43,
+                                  letterSpacing: 0.10,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Actions section
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.only(
+                          top: 20,
+                          left: 16,
+                          right: 24,
+                          bottom: 20,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            // Mégse button
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: TextButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(100),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
+                              ),
+                              child: const Text(
+                                'Mégse',
+                                style: TextStyle(
+                                  color: Color(0xFF1D293D),
+                                  fontSize: 14,
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.43,
+                                  letterSpacing: 0.10,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            // Eltávolítás button
+                            TextButton(
+                              onPressed: () {
+                                _watchlistState.removeStockFromCurrentWatchlist(stock.ticker);
+                                Navigator.pop(context);
+                              },
+                              style: TextButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(100),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
+                              ),
+                              child: const Text(
+                                'Eltávolítás',
+                                style: TextStyle(
+                                  color: Color(0xFF1D293D),
+                                  fontSize: 14,
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.43,
+                                  letterSpacing: 0.10,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-            SizedBox(
-              width: 72,
-              child: Text(
-                currentPrice,
-                textAlign: TextAlign.right,
+          );
+        },
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ReszvenyInfoPage(
+                stockName: stock.name,
+                ticker: stock.ticker,
+              ),
+            ),
+          );
+        },
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                width: isLast ? 0 : 1,
+                color: const Color(0xFFE2E8F0),
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              Text(
+                stock.ticker,
                 style: TextStyle(
                   color: const Color(0xFF1D293D),
                   fontSize: 16,
                   fontFamily: 'Inter',
-                  fontWeight: FontWeight.w400,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-            ),
-          ],
+              Spacer(),
+              SizedBox(
+                width: 73,
+                child: Text(
+                  changePercent,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    color: isPositive
+                        ? const Color(0xFF007A55)
+                        : const Color(0xFFEC003F),
+                    fontSize: 16,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 64,
+                child: Text(
+                  dailyChange,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    color: isPositive
+                        ? const Color(0xFF007A55)
+                        : const Color(0xFFEC003F),
+                    fontSize: 16,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 72,
+                child: Text(
+                  currentPrice,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    color: const Color(0xFF1D293D),
+                    fontSize: 16,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1755,27 +2016,289 @@ class _KedvencekContentState extends State<KedvencekContent> {
     required bool isPositive,
     bool isLast = false,
   }) {
-    return GestureDetector(
+    return Dismissible(
+      key: Key('detailed_${stock.ticker}'),
+      direction: DismissDirection.endToStart, // Swipe left
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        color: const Color(0xFFEC003F),
+        child: Icon(
+          TablerIcons.trash,
+          color: Colors.white,
+          size: 24,
+        ),
+      ),
+      confirmDismiss: (direction) async {
+        // Haptic feedback
+        HapticFeedback.mediumImpact();
+
+        // Show delete confirmation (Figma style)
+        return await showDialog<bool>(
+          context: context,
+          builder: (context) => Dialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28),
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 280, maxWidth: 560),
+              child: Container(
+                width: 312,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    // Content section
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Title
+                          SizedBox(
+                            width: 264,
+                            child: Text(
+                              'Eltávolítás',
+                              style: TextStyle(
+                                color: const Color(0xFF1D293D),
+                                fontSize: 24,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w400,
+                                height: 1.33,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // Message
+                          SizedBox(
+                            width: 264,
+                            child: Text(
+                              'Biztosan eltávolítod a ${stock.name} részvényt a listáról?',
+                              style: TextStyle(
+                                color: const Color(0xFF45556C),
+                                fontSize: 14,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w400,
+                                height: 1.43,
+                                letterSpacing: 0.10,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Actions section
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.only(
+                        top: 20,
+                        left: 16,
+                        right: 24,
+                        bottom: 20,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          // Mégse button
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: TextButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                            ),
+                            child: const Text(
+                              'Mégse',
+                              style: TextStyle(
+                                color: Color(0xFF1D293D),
+                                fontSize: 14,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w500,
+                                height: 1.43,
+                                letterSpacing: 0.10,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Eltávolítás button
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context, true); // Return true to confirm
+                            },
+                            style: TextButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                            ),
+                            child: const Text(
+                              'Eltávolítás',
+                              style: TextStyle(
+                                color: Color(0xFF1D293D),
+                                fontSize: 14,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w500,
+                                height: 1.43,
+                                letterSpacing: 0.10,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ) ?? false; // Return false if dialog dismissed without selection
+      },
+      onDismissed: (direction) {
+        _watchlistState.removeStockFromCurrentWatchlist(stock.ticker);
+      },
+      child: _LongPressableStockRow(
       onLongPress: () {
-        // Show delete confirmation
+        // Haptic feedback
+        HapticFeedback.mediumImpact();
+
+        // Show delete confirmation (Figma style)
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            title: Text('Eltávolítás'),
-            content: Text('Biztosan eltávolítod a ${stock.ticker} részvényt a(z) "${_watchlistState.selectedWatchlist?.name}" mappából?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('Mégse'),
+          builder: (context) => Dialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28),
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 280, maxWidth: 560),
+              child: Container(
+                width: 312,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    // Content section
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Title
+                          SizedBox(
+                            width: 264,
+                            child: Text(
+                              'Eltávolítás',
+                              style: TextStyle(
+                                color: const Color(0xFF1D293D),
+                                fontSize: 24,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w400,
+                                height: 1.33,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // Message
+                          SizedBox(
+                            width: 264,
+                            child: Text(
+                              'Biztosan eltávolítod a ${stock.name} részvényt a listáról?',
+                              style: TextStyle(
+                                color: const Color(0xFF45556C),
+                                fontSize: 14,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w400,
+                                height: 1.43,
+                                letterSpacing: 0.10,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Actions section
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.only(
+                        top: 20,
+                        left: 16,
+                        right: 24,
+                        bottom: 20,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          // Mégse button
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: TextButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                            ),
+                            child: const Text(
+                              'Mégse',
+                              style: TextStyle(
+                                color: Color(0xFF1D293D),
+                                fontSize: 14,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w500,
+                                height: 1.43,
+                                letterSpacing: 0.10,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Eltávolítás button
+                          TextButton(
+                            onPressed: () {
+                              _watchlistState.removeStockFromCurrentWatchlist(stock.ticker);
+                              Navigator.pop(context);
+                            },
+                            style: TextButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                            ),
+                            child: const Text(
+                              'Eltávolítás',
+                              style: TextStyle(
+                                color: Color(0xFF1D293D),
+                                fontSize: 14,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w500,
+                                height: 1.43,
+                                letterSpacing: 0.10,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              TextButton(
-                onPressed: () {
-                  _watchlistState.removeStockFromCurrentWatchlist(stock.ticker);
-                  Navigator.pop(context);
-                },
-                child: Text('Eltávolítás', style: TextStyle(color: Colors.red)),
-              ),
-            ],
+            ),
           ),
         );
       },
@@ -1940,6 +2463,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -2678,6 +3202,97 @@ class _ReorderListPageState extends State<_ReorderListPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// Long Pressable Stock Row with iOS-style animation
+class _LongPressableStockRow extends StatefulWidget {
+  final VoidCallback onLongPress;
+  final VoidCallback onTap;
+  final Widget child;
+
+  const _LongPressableStockRow({
+    required this.onLongPress,
+    required this.onTap,
+    required this.child,
+  });
+
+  @override
+  State<_LongPressableStockRow> createState() => _LongPressableStockRowState();
+}
+
+class _LongPressableStockRowState extends State<_LongPressableStockRow>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _elevationAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 150),
+      vsync: this,
+    );
+
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.03).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+
+    _elevationAnimation = Tween<double>(begin: 0.0, end: 4.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleLongPressStart(LongPressStartDetails details) {
+    _controller.forward();
+  }
+
+  void _handleLongPressEnd(LongPressEndDetails details) {
+    _controller.reverse();
+    widget.onLongPress();
+  }
+
+  void _handleLongPressCancel() {
+    _controller.reverse();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onTap,
+      onLongPressStart: _handleLongPressStart,
+      onLongPressEnd: _handleLongPressEnd,
+      onLongPressCancel: _handleLongPressCancel,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _scaleAnimation.value,
+            child: Material(
+              elevation: _elevationAnimation.value,
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: _controller.value > 0
+                      ? const Color(0xFFF8FAFC)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: widget.child,
+              ),
+            ),
+          );
+        },
       ),
     );
   }
