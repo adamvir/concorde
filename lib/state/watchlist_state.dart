@@ -131,4 +131,20 @@ class WatchlistState extends ChangeNotifier {
 
     notifyListeners();
   }
+
+  // Reorder stocks in current watchlist
+  void reorderStocks(int oldIndex, int newIndex) {
+    final watchlist = selectedWatchlist;
+    if (watchlist == null) return;
+
+    // Adjust index if moving down
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+
+    final ticker = watchlist.tickers.removeAt(oldIndex);
+    watchlist.tickers.insert(newIndex, ticker);
+
+    notifyListeners();
+  }
 }
