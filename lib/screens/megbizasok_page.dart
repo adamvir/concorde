@@ -182,13 +182,24 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
     );
   }
 
+  Future<void> _refreshOrders() async {
+    // Simulate refresh - in production this would fetch from API
+    await Future.delayed(const Duration(milliseconds: 500));
+    setState(() {
+      // Trigger rebuild to refresh the list
+    });
+  }
+
   Widget _buildOrderList(OrderStatus status) {
     final orders = _getFilteredOrders(status);
 
-    return Column(
-      children: [
-        // Table header
-        Container(
+    return RefreshIndicator(
+      onRefresh: _refreshOrders,
+      color: const Color(0xFF009966),
+      child: Column(
+        children: [
+          // Table header
+          Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: const BoxDecoration(
@@ -370,7 +381,8 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
                   },
                 ),
         ),
-      ],
+        ],
+      ),
     );
   }
 

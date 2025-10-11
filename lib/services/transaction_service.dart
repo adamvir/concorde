@@ -243,6 +243,37 @@ class TransactionService extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Update an existing order
+  void updateOrder({
+    required String orderId,
+    required int quantity,
+    required double? limitPrice,
+  }) {
+    final orderIndex = _orders.indexWhere((o) => o.id == orderId);
+    if (orderIndex != -1) {
+      final order = _orders[orderIndex];
+
+      // Update the order
+      _orders[orderIndex] = Order(
+        id: order.id,
+        ticker: order.ticker,
+        stockName: order.stockName,
+        action: order.action,
+        orderedQuantity: quantity,
+        fulfilledQuantity: order.fulfilledQuantity,
+        limitPrice: limitPrice,
+        currency: order.currency,
+        accountName: order.accountName,
+        createdAt: order.createdAt,
+        expiresAt: order.expiresAt,
+        status: order.status,
+        isViewed: false, // Mark as unviewed after modification
+      );
+
+      notifyListeners();
+    }
+  }
+
   // Get orders by status
   List<Order> getOrdersByStatus(OrderStatus status) {
     return _orders.where((o) => o.status == status).toList();

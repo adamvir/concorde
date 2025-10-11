@@ -5,6 +5,7 @@ import '../data/market_stocks_data.dart';
 import '../data/mock_portfolio_data.dart';
 import 'order_confirmation_page.dart';
 import '../widgets/order_success_snackbar.dart';
+import '../models/order_model.dart';
 
 class StockBuyPage extends StatefulWidget {
   final String stockName;
@@ -12,6 +13,7 @@ class StockBuyPage extends StatefulWidget {
   final double currentPrice;
   final String currency;
   final String initialTradeType; // 'Vétel' or 'Eladás'
+  final Order? existingOrder; // For edit mode
 
   const StockBuyPage({
     Key? key,
@@ -20,6 +22,7 @@ class StockBuyPage extends StatefulWidget {
     required this.currentPrice,
     required this.currency,
     this.initialTradeType = 'Vétel',
+    this.existingOrder,
   }) : super(key: key);
 
   @override
@@ -48,13 +51,31 @@ class _StockBuyPageState extends State<StockBuyPage> {
   void initState() {
     super.initState();
     _selectedOrderDirection = widget.initialTradeType; // Set from navigation
-    // Start with market price in the field
-    _priceController.text = widget.currentPrice.toStringAsFixed(2).replaceAll('.', ',');
-    _quantityController.text = '30';
+
+    // Check if editing an existing order
+    if (widget.existingOrder != null) {
+      final order = widget.existingOrder!;
+      // Pre-fill with existing order data
+      _quantityController.text = order.orderedQuantity.toString();
+      _selectedAccount = order.accountName;
+
+      // Set order type based on existing order (CANNOT BE CHANGED IN EDIT MODE)
+      if (order.isMarketOrder) {
+        _orderType = OrderType.market;
+        _priceController.text = widget.currentPrice.toStringAsFixed(2).replaceAll('.', ',');
+      } else {
+        _orderType = OrderType.limit;
+        _priceController.text = order.limitPrice!.toStringAsFixed(2).replaceAll('.', ',');
+      }
+    } else {
+      // New order defaults
+      _priceController.text = widget.currentPrice.toStringAsFixed(2).replaceAll('.', ',');
+      _quantityController.text = '30';
+      _orderType = OrderType.market;
+    }
+
     _stopPriceController.text = '106,00';
     _icebergQuantityController.text = '10';
-    // Set order type to Piaci by default to show market price
-    _orderType = OrderType.market;
   }
 
   @override
@@ -99,6 +120,8 @@ class _StockBuyPageState extends State<StockBuyPage> {
       return;
     }
 
+    bool isEditMode = widget.existingOrder != null;
+
     // Navigate to confirmation page
     Navigator.push(
       context,
@@ -106,40 +129,58 @@ class _StockBuyPageState extends State<StockBuyPage> {
         builder: (context) => OrderConfirmationPage(
           stockName: widget.stockName,
           ticker: widget.ticker,
-          orderDirection: 'Vétel',
+          orderDirection: isEditMode ? 'Módosítás' : 'Vétel',
           orderType: _orderType == OrderType.market ? 'Piaci' : 'Limit',
           quantity: quantity,
           price: price,
           currency: widget.currency,
           accountName: _selectedAccount,
           expectedValue: _calculateTotalCost(),
+          isEditMode: isEditMode,
           onConfirm: () {
-            // Execute the actual transaction
-            bool success = _transactionService.executeBuy(
-              ticker: widget.ticker,
-              stockName: widget.stockName,
-              quantity: quantity,
-              price: price,
-              accountName: _selectedAccount,
-              orderType: _orderType,
-            );
-
-            if (success) {
+            if (isEditMode) {
+              // Update existing order
+              _transactionService.updateOrder(
+                orderId: widget.existingOrder!.id,
+                quantity: quantity,
+                limitPrice: _orderType == OrderType.limit ? price : null,
+              );
               OrderSuccessSnackbar.show(
                 context: context,
-                orderDirection: 'Vétel',
+                orderDirection: 'Módosítás',
                 stockName: widget.stockName,
                 quantity: quantity,
                 price: price,
                 currency: widget.currency,
               );
             } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Nincs elég készpénz! (${_calculateTotalCost().toStringAsFixed(0)} ${widget.currency} szükséges)'),
-                  backgroundColor: Colors.red,
-                ),
+              // Execute the actual transaction
+              bool success = _transactionService.executeBuy(
+                ticker: widget.ticker,
+                stockName: widget.stockName,
+                quantity: quantity,
+                price: price,
+                accountName: _selectedAccount,
+                orderType: _orderType,
               );
+
+              if (success) {
+                OrderSuccessSnackbar.show(
+                  context: context,
+                  orderDirection: 'Vétel',
+                  stockName: widget.stockName,
+                  quantity: quantity,
+                  price: price,
+                  currency: widget.currency,
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Nincs elég készpénz! (${_calculateTotalCost().toStringAsFixed(0)} ${widget.currency} szükséges)'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             }
           },
         ),
@@ -161,6 +202,8 @@ class _StockBuyPageState extends State<StockBuyPage> {
       return;
     }
 
+    bool isEditMode = widget.existingOrder != null;
+
     // Navigate to confirmation page
     Navigator.push(
       context,
@@ -168,39 +211,57 @@ class _StockBuyPageState extends State<StockBuyPage> {
         builder: (context) => OrderConfirmationPage(
           stockName: widget.stockName,
           ticker: widget.ticker,
-          orderDirection: 'Eladás',
+          orderDirection: isEditMode ? 'Módosítás' : 'Eladás',
           orderType: _orderType == OrderType.market ? 'Piaci' : 'Limit',
           quantity: quantity,
           price: price,
           currency: widget.currency,
           accountName: _selectedAccount,
           expectedValue: _calculateTotalCost(),
+          isEditMode: isEditMode,
           onConfirm: () {
-            // Execute the actual transaction
-            bool success = _transactionService.executeSell(
-              ticker: widget.ticker,
-              quantity: quantity,
-              price: price,
-              accountName: _selectedAccount,
-              orderType: _orderType,
-            );
-
-            if (success) {
+            if (isEditMode) {
+              // Update existing order
+              _transactionService.updateOrder(
+                orderId: widget.existingOrder!.id,
+                quantity: quantity,
+                limitPrice: _orderType == OrderType.limit ? price : null,
+              );
               OrderSuccessSnackbar.show(
                 context: context,
-                orderDirection: 'Eladás',
+                orderDirection: 'Módosítás',
                 stockName: widget.stockName,
                 quantity: quantity,
                 price: price,
                 currency: widget.currency,
               );
             } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Nincs elég részvény az eladáshoz!'),
-                  backgroundColor: Colors.red,
-                ),
+              // Execute the actual transaction
+              bool success = _transactionService.executeSell(
+                ticker: widget.ticker,
+                quantity: quantity,
+                price: price,
+                accountName: _selectedAccount,
+                orderType: _orderType,
               );
+
+              if (success) {
+                OrderSuccessSnackbar.show(
+                  context: context,
+                  orderDirection: 'Eladás',
+                  stockName: widget.stockName,
+                  quantity: quantity,
+                  price: price,
+                  currency: widget.currency,
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Nincs elég részvény az eladáshoz!'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             }
           },
         ),
@@ -400,7 +461,7 @@ class _StockBuyPageState extends State<StockBuyPage> {
                   label: 'Ár típus',
                   value: _orderType == OrderType.limit ? 'Limit' : 'Piaci',
                   items: ['Limit', 'Piaci'],
-                  onChanged: (value) {
+                  onChanged: widget.existingOrder != null ? null : (value) {
                     setState(() {
                       _orderType = value == 'Limit' ? OrderType.limit : OrderType.market;
                       // Update price when switching to market
@@ -409,6 +470,7 @@ class _StockBuyPageState extends State<StockBuyPage> {
                       }
                     });
                   },
+                  isDisabled: widget.existingOrder != null, // Disable in edit mode
                 ),
               ),
             ],
@@ -602,8 +664,21 @@ class _StockBuyPageState extends State<StockBuyPage> {
 
   Widget _buildBottomButton() {
     bool isSell = _selectedOrderDirection == 'Eladás';
-    Color buttonColor = isSell ? Color(0xFFEC003F) : Color(0xFF009966);
-    String buttonText = isSell ? 'Eladás áttekintése' : 'Vétel áttekintése';
+    bool isEditMode = widget.existingOrder != null;
+
+    // Dynamic colors: Módosítás = dark grey, Vétel = green, Eladás = red
+    Color buttonColor;
+    if (isEditMode) {
+      buttonColor = const Color(0xFF1D293D); // Dark grey for edit
+    } else if (isSell) {
+      buttonColor = const Color(0xFFEC003F); // Red for sell
+    } else {
+      buttonColor = const Color(0xFF009966); // Green for buy
+    }
+
+    String buttonText = isEditMode
+        ? 'Módosítás áttekintése'
+        : (isSell ? 'Eladás áttekintése' : 'Vétel áttekintése');
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -647,8 +722,9 @@ class _StockBuyPageState extends State<StockBuyPage> {
     required String label,
     required String value,
     required List<String> items,
-    required Function(String?) onChanged,
+    required Function(String?)? onChanged,
     String? helperText,
+    bool isDisabled = false,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -656,8 +732,9 @@ class _StockBuyPageState extends State<StockBuyPage> {
         Container(
           height: 56,
           decoration: BoxDecoration(
-            border: Border.all(color: Color(0xFFCAD5E2)),
+            border: Border.all(color: isDisabled ? Color(0xFFE2E8F0) : Color(0xFFCAD5E2)),
             borderRadius: BorderRadius.circular(4),
+            color: isDisabled ? Color(0xFFF8FAFC) : Colors.white,
           ),
           child: Stack(
             clipBehavior: Clip.none,
@@ -671,9 +748,9 @@ class _StockBuyPageState extends State<StockBuyPage> {
                         child: DropdownButton<String>(
                           value: value,
                           isExpanded: true,
-                          icon: Icon(TablerIcons.refresh, size: 16),
+                          icon: Icon(TablerIcons.refresh, size: 16, color: isDisabled ? Color(0xFFCAD5E2) : null),
                           style: TextStyle(
-                            color: Color(0xFF1D293D),
+                            color: isDisabled ? Color(0xFF94A3B8) : Color(0xFF1D293D),
                             fontSize: 16,
                             fontFamily: 'Inter',
                             fontWeight: FontWeight.w400,

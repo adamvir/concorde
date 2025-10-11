@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../data/market_stocks_data.dart';
 import '../state/favorites_state.dart';
+import '../state/watchlist_state.dart';
 import 'reszveny_info_page.dart';
 import 'dart:math';
 
@@ -30,8 +33,10 @@ class KedvencekContent extends StatefulWidget {
 
 class _KedvencekContentState extends State<KedvencekContent> {
   final FavoritesState _favoritesState = FavoritesState();
+  final WatchlistState _watchlistState = WatchlistState();
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   List<MarketStock> _searchResults = [];
   final Random _random = Random();
 
@@ -39,16 +44,23 @@ class _KedvencekContentState extends State<KedvencekContent> {
   void initState() {
     super.initState();
     _favoritesState.addListener(_onFavoritesChanged);
+    _watchlistState.addListener(_onWatchlistChanged);
   }
 
   @override
   void dispose() {
     _favoritesState.removeListener(_onFavoritesChanged);
+    _watchlistState.removeListener(_onWatchlistChanged);
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
   void _onFavoritesChanged() {
+    setState(() {});
+  }
+
+  void _onWatchlistChanged() {
     setState(() {});
   }
 
@@ -58,6 +70,12 @@ class _KedvencekContentState extends State<KedvencekContent> {
       if (!_isSearching) {
         _searchController.clear();
         _searchResults.clear();
+        _searchFocusNode.unfocus();
+      } else {
+        // Request focus immediately when entering search mode
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _searchFocusNode.requestFocus();
+        });
       }
     });
   }
@@ -111,44 +129,243 @@ class _KedvencekContentState extends State<KedvencekContent> {
     return '${percent >= 0 ? '+' : ''}${percent.toStringAsFixed(2)}%';
   }
 
+  // Show watchlist selector bottom sheet
+  void _showWatchlistSelector() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Text(
+                  'Mappák',
+                  style: TextStyle(
+                    color: const Color(0xFF1D293D),
+                    fontSize: 18,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const Divider(),
+              // Watchlist items
+              ..._watchlistState.watchlists.map((watchlist) {
+                final isSelected = watchlist.id == _watchlistState.selectedWatchlistId;
+                return ListTile(
+                  leading: Icon(
+                    TablerIcons.folder,
+                    color: isSelected ? const Color(0xFFFF9800) : const Color(0xFF45556C),
+                  ),
+                  title: Text(
+                    watchlist.name,
+                    style: TextStyle(
+                      color: const Color(0xFF1D293D),
+                      fontSize: 16,
+                      fontFamily: 'Inter',
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    ),
+                  ),
+                  subtitle: Text(
+                    '${watchlist.tickers.length} részvény',
+                    style: TextStyle(
+                      color: const Color(0xFF94A3B8),
+                      fontSize: 14,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  trailing: isSelected
+                      ? const Icon(TablerIcons.check, color: Color(0xFFFF9800))
+                      : null,
+                  onTap: () {
+                    _watchlistState.selectWatchlist(watchlist.id);
+                    Navigator.pop(context);
+                  },
+                );
+              }),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Show add watchlist dialog
+  void _showAddWatchlistDialog() {
+    final TextEditingController nameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Új mappa'),
+        content: TextField(
+          controller: nameController,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Mappa neve',
+            hintText: 'pl. Tech részvények',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Mégse'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (nameController.text.trim().isNotEmpty) {
+                _watchlistState.createWatchlist(nameController.text.trim());
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Létrehozás'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Show watchlist options (rename, delete)
+  void _showWatchlistOptions() {
+    final currentWatchlist = _watchlistState.selectedWatchlist;
+    if (currentWatchlist == null) return;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(TablerIcons.edit, color: Color(0xFF1D293D)),
+                title: const Text('Mappa átnevezése'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showRenameWatchlistDialog(currentWatchlist);
+                },
+              ),
+              if (_watchlistState.watchlists.length > 1)
+                ListTile(
+                  leading: const Icon(TablerIcons.trash, color: Color(0xFFEC003F)),
+                  title: const Text(
+                    'Mappa törlése',
+                    style: TextStyle(color: Color(0xFFEC003F)),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showDeleteWatchlistDialog(currentWatchlist);
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Show rename watchlist dialog
+  void _showRenameWatchlistDialog(Watchlist watchlist) {
+    final TextEditingController nameController = TextEditingController(text: watchlist.name);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Mappa átnevezése'),
+        content: TextField(
+          controller: nameController,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Új név',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Mégse'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (nameController.text.trim().isNotEmpty) {
+                _watchlistState.renameWatchlist(watchlist.id, nameController.text.trim());
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Mentés'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Show delete watchlist dialog
+  void _showDeleteWatchlistDialog(Watchlist watchlist) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Mappa törlése'),
+        content: Text('Biztosan törölni szeretnéd a "${watchlist.name}" mappát? A benne lévő ${watchlist.tickers.length} részvény elvész.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Mégse'),
+          ),
+          TextButton(
+            onPressed: () {
+              _watchlistState.deleteWatchlist(watchlist.id);
+              Navigator.pop(context);
+            },
+            child: const Text('Törlés', style: TextStyle(color: Color(0xFFEC003F))),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final favoriteStocks = _favoritesState.favoriteStocks;
+    // Get stocks from current watchlist instead of global favorites
+    final currentWatchlistTickers = _watchlistState.selectedWatchlistTickers;
+    final favoriteStocks = currentWatchlistTickers
+        .map((ticker) => MarketStocksData.getStockByTicker(ticker))
+        .where((stock) => stock != null)
+        .cast<MarketStock>()
+        .toList();
 
     return Column(
       children: [
-        // Status bar
-        Container(
-          width: double.infinity,
-          height: 52,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '9:30',
-                style: TextStyle(
-                  color: const Color(0xFF1D293D),
-                  fontSize: 14,
-                  fontFamily: 'Roboto',
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-        // Header
+        // App Bar Header
         Container(
           width: double.infinity,
           height: 64,
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
           child: Row(
             children: [
-              IconButton(
-                icon: Icon(Icons.menu, color: Color(0xFF1D293D)),
-                onPressed: () {},
+              // Concorde logo
+              Padding(
+                padding: const EdgeInsets.only(left: 12, right: 4),
+                child: SvgPicture.asset(
+                  'lib/assets/images/concorde.svg',
+                  width: 40,
+                  height: 40,
+                ),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               if (!_isSearching)
                 Expanded(
                   child: Text(
@@ -177,7 +394,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                         Expanded(
                           child: TextField(
                             controller: _searchController,
-                            autofocus: true,
+                            focusNode: _searchFocusNode,
                             onChanged: _onSearchChanged,
                             decoration: InputDecoration(
                               hintText: 'Keresés részvények között...',
@@ -209,14 +426,16 @@ class _KedvencekContentState extends State<KedvencekContent> {
                 ),
               IconButton(
                 icon: Icon(
-                  _isSearching ? Icons.close : Icons.search,
+                  _isSearching ? TablerIcons.x : TablerIcons.search,
                   color: Color(0xFF1D293D),
                 ),
                 onPressed: _toggleSearch,
               ),
               IconButton(
-                icon: Icon(Icons.more_vert, color: Color(0xFF1D293D)),
-                onPressed: () {},
+                icon: Icon(TablerIcons.speakerphone, color: Color(0xFF1D293D)),
+                onPressed: () {
+                  // TODO: Show notifications/announcements
+                },
               ),
             ],
           ),
@@ -247,13 +466,13 @@ class _KedvencekContentState extends State<KedvencekContent> {
               itemCount: _searchResults.length,
               itemBuilder: (context, index) {
                 final stock = _searchResults[index];
-                final isFavorite = _favoritesState.isFavorite(stock.ticker);
+                final isInWatchlist = _watchlistState.isStockInCurrentWatchlist(stock.ticker);
                 final dailyChangePercent = _getRandomDailyChangePercent();
                 final isPositive = dailyChangePercent >= 0;
 
                 return _buildSearchResultRow(
                   stock: stock,
-                  isFavorite: isFavorite,
+                  isFavorite: isInWatchlist,
                   dailyChangePercent: dailyChangePercent,
                   isPositive: isPositive,
                   isLast: index == _searchResults.length - 1,
@@ -332,52 +551,55 @@ class _KedvencekContentState extends State<KedvencekContent> {
             ),
           ),
         ] else ...[
-          // Filter row (only show when not searching)
+          // Watchlist selector row (only show when not searching)
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
                 Expanded(
-                  child: Container(
-                    height: 56,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        width: 1,
-                        color: const Color(0xFFCAD5E2),
+                  child: GestureDetector(
+                    onTap: () => _showWatchlistSelector(),
+                    child: Container(
+                      height: 56,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          width: 1,
+                          color: const Color(0xFFCAD5E2),
+                        ),
+                        borderRadius: BorderRadius.circular(4),
                       ),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Első',
-                            style: TextStyle(
-                              color: const Color(0xFF1D293D),
-                              fontSize: 16,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w400,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _watchlistState.selectedWatchlist?.name ?? 'Első',
+                              style: TextStyle(
+                                color: const Color(0xFF1D293D),
+                                fontSize: 16,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w400,
+                              ),
                             ),
                           ),
-                        ),
-                        Icon(Icons.arrow_drop_down, size: 24),
-                      ],
+                          Icon(TablerIcons.chevron_down, size: 24, color: Color(0xFF1D293D)),
+                        ],
+                      ),
                     ),
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.sort, size: 24),
+                  icon: Icon(TablerIcons.plus, size: 24, color: Color(0xFF1D293D)),
+                  onPressed: () => _showAddWatchlistDialog(),
+                ),
+                IconButton(
+                  icon: Icon(TablerIcons.filter, size: 24, color: Color(0xFF1D293D)),
                   onPressed: () {},
                 ),
                 IconButton(
-                  icon: Icon(Icons.filter_list, size: 24),
-                  onPressed: () {},
-                ),
-                IconButton(
-                  icon: Icon(Icons.more_vert, size: 24),
-                  onPressed: () {},
+                  icon: Icon(TablerIcons.dots_vertical, size: 24, color: Color(0xFF1D293D)),
+                  onPressed: () => _showWatchlistOptions(),
                 ),
               ],
             ),
@@ -541,17 +763,25 @@ class _KedvencekContentState extends State<KedvencekContent> {
         ),
         child: Row(
           children: [
-            // Favorite icon
+            // Add to watchlist icon
             GestureDetector(
               onTap: () {
-                _favoritesState.toggleFavorite(stock.ticker);
+                if (_watchlistState.isStockInCurrentWatchlist(stock.ticker)) {
+                  _watchlistState.removeStockFromCurrentWatchlist(stock.ticker);
+                } else {
+                  _watchlistState.addStockToCurrentWatchlist(stock.ticker);
+                }
               },
               child: Container(
                 padding: const EdgeInsets.all(4),
                 child: Icon(
-                  isFavorite ? Icons.star : Icons.star_border,
+                  _watchlistState.isStockInCurrentWatchlist(stock.ticker)
+                      ? TablerIcons.star_filled
+                      : TablerIcons.star,
                   size: 24,
-                  color: isFavorite ? const Color(0xFFFFC107) : const Color(0xFF94A3B8),
+                  color: _watchlistState.isStockInCurrentWatchlist(stock.ticker)
+                      ? const Color(0xFFFFC107)
+                      : const Color(0xFF94A3B8),
                 ),
               ),
             ),
@@ -652,7 +882,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
           context: context,
           builder: (context) => AlertDialog(
             title: Text('Eltávolítás'),
-            content: Text('Biztosan eltávolítod a ${stock.ticker} részvényt a kedvencek közül?'),
+            content: Text('Biztosan eltávolítod a ${stock.ticker} részvényt a(z) "${_watchlistState.selectedWatchlist?.name}" mappából?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
@@ -660,12 +890,23 @@ class _KedvencekContentState extends State<KedvencekContent> {
               ),
               TextButton(
                 onPressed: () {
-                  _favoritesState.removeFavorite(stock.ticker);
+                  _watchlistState.removeStockFromCurrentWatchlist(stock.ticker);
                   Navigator.pop(context);
                 },
                 child: Text('Eltávolítás', style: TextStyle(color: Colors.red)),
               ),
             ],
+          ),
+        );
+      },
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ReszvenyInfoPage(
+              stockName: stock.name,
+              ticker: stock.ticker,
+            ),
           ),
         );
       },

@@ -3,6 +3,7 @@ import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:intl/intl.dart';
 import '../models/order_model.dart';
 import '../services/transaction_service.dart';
+import 'stock_buy_page.dart';
 
 class OrderDetailPage extends StatefulWidget {
   final Order order;
@@ -547,13 +548,24 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   void _handleModify() {
-    // TODO: Navigate to edit order page
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Módosítás funkció hamarosan...'),
-        backgroundColor: Color(0xFF1D293D),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => StockBuyPage(
+          stockName: widget.order.stockName,
+          ticker: widget.order.ticker,
+          currentPrice: widget.order.limitPrice ?? 0.0,
+          currency: widget.order.currency,
+          initialTradeType: widget.order.action == OrderAction.buy ? 'Vétel' : 'Eladás',
+          existingOrder: widget.order,
+        ),
       ),
-    );
+    ).then((_) {
+      // Refresh the page after returning from edit
+      if (mounted) {
+        Navigator.pop(context); // Close detail page and return to list
+      }
+    });
   }
 
   void _handleCancel() {

@@ -500,6 +500,17 @@ class MarketStocksData {
     }).toList();
   }
 
+  // Get stock by ticker
+  static MarketStock? getStockByTicker(String ticker) {
+    try {
+      return allStocks.firstWhere(
+        (stock) => stock.ticker.toUpperCase() == ticker.toUpperCase(),
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
   // Get stock by exact ticker match
   static MarketStock? getByTicker(String ticker) {
     try {

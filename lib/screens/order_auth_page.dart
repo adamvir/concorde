@@ -4,10 +4,14 @@ import '../services/biometric_auth_service.dart';
 
 class OrderAuthPage extends StatefulWidget {
   final VoidCallback onSuccess;
+  final bool isEditMode;
+  final String orderDirection;
 
   const OrderAuthPage({
     super.key,
     required this.onSuccess,
+    this.isEditMode = false,
+    this.orderDirection = 'Vétel',
   });
 
   @override
@@ -130,9 +134,9 @@ class _OrderAuthPageState extends State<OrderAuthPage> {
           icon: const Icon(TablerIcons.arrow_left, color: Color(0xFF1D293D)),
           onPressed: () => Navigator.pop(context, false),
         ),
-        title: const Text(
-          'Megbízás jóváhagyása',
-          style: TextStyle(
+        title: Text(
+          widget.isEditMode ? 'Megbízás módosításának jóváhagyása' : 'Megbízás jóváhagyása',
+          style: const TextStyle(
             color: Color(0xFF1D293D),
             fontSize: 22,
             fontFamily: 'Inter',

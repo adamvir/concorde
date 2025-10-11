@@ -5,7 +5,7 @@ import 'order_auth_page.dart';
 class OrderConfirmationPage extends StatelessWidget {
   final String stockName;
   final String ticker;
-  final String orderDirection; // 'Vétel' or 'Eladás'
+  final String orderDirection; // 'Vétel' or 'Eladás' or 'Módosítás'
   final String orderType; // 'Limit' or 'Piaci'
   final int quantity;
   final double price;
@@ -13,6 +13,7 @@ class OrderConfirmationPage extends StatelessWidget {
   final String accountName;
   final double expectedValue;
   final VoidCallback onConfirm;
+  final bool isEditMode;
 
   const OrderConfirmationPage({
     super.key,
@@ -26,15 +27,33 @@ class OrderConfirmationPage extends StatelessWidget {
     required this.accountName,
     required this.expectedValue,
     required this.onConfirm,
+    this.isEditMode = false,
   });
 
   @override
   Widget build(BuildContext context) {
     bool isBuy = orderDirection == 'Vétel';
-    Color headerColor = isBuy ? Color(0xFF009966) : Color(0xFFEC003F);
-    String headerText = isBuy
-        ? 'Vétel piaci áron\n$stockName\nkb. ${expectedValue.toStringAsFixed(0)} $currency értékben'
-        : 'Eladás piaci áron\n$stockName\nkb. ${expectedValue.toStringAsFixed(0)} $currency értékben';
+    bool isSell = orderDirection == 'Eladás';
+
+    // Dynamic colors: Módosítás = dark grey, Vétel = green, Eladás = red
+    Color headerColor;
+    if (isEditMode) {
+      headerColor = const Color(0xFF1D293D); // Dark grey for edit
+    } else if (isBuy) {
+      headerColor = const Color(0xFF009966); // Green for buy
+    } else {
+      headerColor = const Color(0xFFEC003F); // Red for sell
+    }
+
+    String orderTypeText = orderType == 'Piaci' ? 'piaci áron' : 'limit árfolyamon';
+    String headerTitle;
+    if (isEditMode) {
+      headerTitle = 'Megbízás módosítása';
+    } else if (isBuy) {
+      headerTitle = 'Vétel $orderTypeText';
+    } else {
+      headerTitle = 'Eladás $orderTypeText';
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -62,7 +81,7 @@ class OrderConfirmationPage extends StatelessWidget {
               child: Column(
                 children: [
                   // Header with icon
-                  _buildHeader(headerColor, headerText, isBuy),
+                  _buildHeader(headerColor, headerTitle, isBuy),
                   SizedBox(height: 24),
                   // Order details
                   _buildSection(
@@ -110,38 +129,76 @@ class OrderConfirmationPage extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(Color color, String text, bool isBuy) {
+  Widget _buildHeader(Color color, String headerTitle, bool isBuy) {
+    // Determine icon based on edit mode or buy/sell
+    IconData iconData;
+    if (isEditMode) {
+      iconData = TablerIcons.circle_minus; // Minus icon for edit
+    } else if (isBuy) {
+      iconData = TablerIcons.circle_plus; // Plus icon for buy
+    } else {
+      iconData = TablerIcons.circle_minus; // Minus icon for sell
+    }
+
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withValues(alpha: 0.05),
       ),
-      child: Column(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Left side - Text content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  headerTitle,
+                  style: const TextStyle(
+                    color: Color(0xFF1D293D),
+                    fontSize: 20,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  stockName,
+                  style: const TextStyle(
+                    color: Color(0xFF1D293D),
+                    fontSize: 16,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'kb. ${expectedValue.toStringAsFixed(0)} $currency értékben',
+                  style: const TextStyle(
+                    color: Color(0xFF45556C),
+                    fontSize: 14,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Right side - Icon
           Container(
-            width: 56,
-            height: 56,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
               color: color,
               shape: BoxShape.circle,
             ),
             child: Icon(
-              isBuy ? TablerIcons.circle_plus : TablerIcons.circle_minus,
+              iconData,
               color: Colors.white,
-              size: 32,
-            ),
-          ),
-          SizedBox(height: 16),
-          Text(
-            text,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Color(0xFF1D293D),
-              fontSize: 16,
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w500,
-              height: 1.5,
+              size: 28,
             ),
           ),
         ],
@@ -292,8 +349,19 @@ class OrderConfirmationPage extends StatelessWidget {
   }
 
   Widget _buildBottomButton(BuildContext context, bool isBuy) {
-    Color buttonColor = isBuy ? Color(0xFF009966) : Color(0xFFEC003F);
-    String buttonText = isBuy ? 'Vétel jóváhagyása' : 'Eladás jóváhagyása';
+    // Dynamic colors: Módosítás = dark grey, Vétel = green, Eladás = red
+    Color buttonColor;
+    if (isEditMode) {
+      buttonColor = const Color(0xFF1D293D); // Dark grey for edit
+    } else if (isBuy) {
+      buttonColor = const Color(0xFF009966); // Green for buy
+    } else {
+      buttonColor = const Color(0xFFEC003F); // Red for sell
+    }
+
+    String buttonText = isEditMode
+        ? 'Módosítás jóváhagyása'
+        : (isBuy ? 'Vétel jóváhagyása' : 'Eladás jóváhagyása');
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -313,6 +381,8 @@ class OrderConfirmationPage extends StatelessWidget {
                     // Execute the transaction
                     onConfirm();
                   },
+                  isEditMode: isEditMode,
+                  orderDirection: orderDirection,
                 ),
               ),
             );
