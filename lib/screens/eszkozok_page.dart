@@ -3,10 +3,12 @@ import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'reszvenyek_page.dart';
 import 'main_navigation.dart';
 import 'szamla_detail_page.dart';
+import 'reszveny_info_page.dart';
 import '../widgets/account_selector_bottom_sheet.dart';
 import '../state/account_state.dart';
 import '../state/currency_state.dart';
 import '../data/mock_portfolio_data.dart';
+import '../services/transaction_service.dart';
 
 class EszkozokPage extends StatelessWidget {
   const EszkozokPage({Key? key}) : super(key: key);
@@ -132,19 +134,28 @@ class _EszkozokContentState extends State<EszkozokContent> {
   final AccountState _accountState = AccountState();
   final CurrencyState _currencyState = CurrencyState();
   final MockPortfolioData _portfolioData = MockPortfolioData();
+  final TransactionService _transactionService = TransactionService();
 
   @override
   void initState() {
     super.initState();
     _accountState.addListener(_onAccountChanged);
     _currencyState.addListener(_onCurrencyChanged);
+    _transactionService.addListener(_onTransactionChanged);
   }
 
   @override
   void dispose() {
     _accountState.removeListener(_onAccountChanged);
     _currencyState.removeListener(_onCurrencyChanged);
+    _transactionService.removeListener(_onTransactionChanged);
     super.dispose();
+  }
+
+  void _onTransactionChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _onAccountChanged() {
@@ -324,11 +335,19 @@ class _EszkozokContentState extends State<EszkozokContent> {
           ),
 
           Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                // Portfolio Summary
-                Container(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                // Trigger a rebuild to refresh data
+                setState(() {});
+                // Small delay for visual feedback
+                await Future.delayed(Duration(milliseconds: 300));
+              },
+              child: SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  children: [
+                  // Portfolio Summary
+                  Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -511,12 +530,15 @@ class _EszkozokContentState extends State<EszkozokContent> {
                 // Progress bar and list (conditional based on grouping)
                 _selectedGrouping == 'Eszközosztály'
                     ? _buildAssetClassView()
-                    : _buildAccountView(),
+                    : _selectedGrouping == 'Termék'
+                      ? _buildProductView()
+                      : _buildAccountView(),
 
                 SizedBox(height: 24),
               ],
             ),
           ),
+        ),
         ),
       ],
     ),
@@ -648,6 +670,158 @@ class _EszkozokContentState extends State<EszkozokContent> {
                 );
   }
 
+  // Product view (by individual products - stocks, funds, etc.)
+  Widget _buildProductView() {
+    AccountPortfolio portfolio = _getCurrentPortfolio();
+    String currency = _currencyState.selectedCurrency;
+
+    // Create a list of all products (stocks, funds, cash) with their values
+    List<Map<String, dynamic>> products = [];
+
+    // Add stocks
+    for (var stock in portfolio.stocks) {
+      double valueInCurrency = MarketData.convert(stock.totalValue, stock.currency, currency);
+      double profitInCurrency = MarketData.convert(stock.unrealizedProfit, stock.currency, currency);
+      products.add({
+        'name': stock.name,
+        'ticker': stock.ticker,
+        'value': valueInCurrency,
+        'profit': profitInCurrency,
+        'profitPercent': stock.profitPercent,
+        'type': 'stock',
+      });
+    }
+
+    // Add funds
+    for (var fund in portfolio.funds) {
+      double valueInCurrency = MarketData.convert(fund.value, fund.currency, currency);
+      double profitInCurrency = MarketData.convert(fund.unrealizedProfit, fund.currency, currency);
+      products.add({
+        'name': fund.name,
+        'value': valueInCurrency,
+        'profit': profitInCurrency,
+        'profitPercent': fund.profitPercent,
+        'type': 'fund',
+      });
+    }
+
+    // Add cash (each currency as separate item)
+    for (var cash in portfolio.cash) {
+      double valueInCurrency = MarketData.convert(cash.amount, cash.currency, currency);
+      products.add({
+        'name': 'Készpénz (${cash.currency})',
+        'value': valueInCurrency,
+        'profit': 0.0,
+        'profitPercent': 0.0,
+        'type': 'cash',
+      });
+    }
+
+    // Sort by value (descending)
+    products.sort((a, b) => b['value'].compareTo(a['value']));
+
+    // Calculate total value for percentages
+    double totalValue = products.fold(0.0, (sum, item) => sum + item['value']);
+
+    // Generate colors for progress bar
+    List<Color> colors = [
+      const Color(0xFFE17100),
+      const Color(0xFFFFBA00),
+      const Color(0xFF00A3FF),
+      const Color(0xFF7C3AED),
+      const Color(0xFFEC4899),
+      const Color(0xFF10B981),
+      const Color(0xFFF59E0B),
+      const Color(0xFF8B5CF6),
+    ];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.only(top: 8, left: 16, right: 16),
+      child: Column(
+        children: [
+          // Progress bar
+          if (products.isNotEmpty)
+            Container(
+              width: double.infinity,
+              height: 12,
+              clipBehavior: Clip.antiAlias,
+              decoration: ShapeDecoration(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: Row(
+                children: products.asMap().entries.map((entry) {
+                  int index = entry.key;
+                  var product = entry.value;
+                  double percentage = totalValue > 0 ? (product['value'] / totalValue) * 100 : 0;
+
+                  return Expanded(
+                    flex: (percentage * 10).round().clamp(1, 1000),
+                    child: Container(
+                      color: colors[index % colors.length],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          SizedBox(height: 14),
+          // Product list
+          if (products.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: Text(
+                  'Nincs termék',
+                  style: TextStyle(
+                    color: const Color(0xFF94A3B8),
+                    fontSize: 14,
+                    fontFamily: 'Inter',
+                  ),
+                ),
+              ),
+            )
+          else
+            Column(
+              children: products.asMap().entries.map((entry) {
+                int index = entry.key;
+                var product = entry.value;
+                double percentage = totalValue > 0 ? (product['value'] / totalValue) * 100 : 0;
+                bool? isPositive;
+                if (product['type'] != 'cash') {
+                  isPositive = product['profit'] >= 0;
+                }
+
+                return _buildAssetRow(
+                  product['name'],
+                  '${_formatCurrency(product['value'])} $currency',
+                  '${percentage.toStringAsFixed(1)}%',
+                  product['type'] != 'cash' ? '${product['profitPercent'] >= 0 ? '+' : ''}${product['profitPercent'].toStringAsFixed(2)}%' : '0,00%',
+                  product['type'] != 'cash' ? '${product['profit'] >= 0 ? '+' : ''}${_formatCurrency(product['profit'].abs())}' : '0',
+                  isPositive,
+                  iconColor: colors[index % colors.length],
+                  isLast: index == products.length - 1,
+                  onTap: product['type'] == 'stock' ? () {
+                    // Navigate to ReszvenyInfoPage for stocks only
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ReszvenyInfoPage(
+                          stockName: product['name'],
+                          ticker: product['ticker'],
+                        ),
+                      ),
+                    );
+                  } : null,
+                );
+              }).toList(),
+            ),
+        ],
+      ),
+    );
+  }
+
   // Account view (new)
   Widget _buildAccountView() {
     return Container(
@@ -680,8 +854,8 @@ class _EszkozokContentState extends State<EszkozokContent> {
 
     // Define colors for accounts
     Map<String, Color> accountColors = {
-      'TBSZ 2023': Color(0xFFFFBA00),
-      'TBSZ 2024': Color(0xFFE17100),
+      'TBSZ-2023': Color(0xFFFFBA00),
+      'TBSZ-2024': Color(0xFFE17100),
       'Értékpapírszámla': Color(0xFF6B7280),
     };
 
@@ -717,8 +891,8 @@ class _EszkozokContentState extends State<EszkozokContent> {
 
     // Define colors for account icons
     Map<String, Color> accountColors = {
-      'TBSZ 2023': Color(0xFFFFBA00),
-      'TBSZ 2024': Color(0xFFE17100),
+      'TBSZ-2023': Color(0xFFFFBA00),
+      'TBSZ-2024': Color(0xFFE17100),
       'Értékpapírszámla': Color(0xFF6B7280),
     };
 

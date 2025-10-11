@@ -14,8 +14,7 @@ class Stock {
   final String isin;
   final String exchange;
   final int quantity;
-  final double avgPrice;
-  final double currentPrice;
+  final double price; // Vételár = jelenlegi ár (nincs profit/loss)
   final String currency;
   final DateTime purchaseDate;
 
@@ -25,18 +24,21 @@ class Stock {
     required this.isin,
     required this.exchange,
     required this.quantity,
-    required this.avgPrice,
-    required this.currentPrice,
+    required this.price,
     required this.currency,
     required this.purchaseDate,
   });
 
-  // Calculated values
-  double get totalValue => quantity * currentPrice;
-  double get totalCost => quantity * avgPrice;
-  double get unrealizedProfit => totalValue - totalCost;
-  double get profitPercent => totalCost > 0 ? ((currentPrice - avgPrice) / avgPrice) * 100 : 0;
-  bool get isPositive => unrealizedProfit >= 0;
+  // Backward compatibility
+  double get avgPrice => price;
+  double get currentPrice => price;
+
+  // Calculated values (nincs profit mivel currentPrice == avgPrice)
+  double get totalValue => quantity * price;
+  double get totalCost => quantity * price;
+  double get unrealizedProfit => 0.0; // Nincs profit/loss
+  double get profitPercent => 0.0; // Nincs profit/loss
+  bool get isPositive => true;
 
   // Convert to HUF
   double totalValueInHUF(Map<String, double> rates) {
@@ -44,7 +46,7 @@ class Stock {
   }
 
   double unrealizedProfitInHUF(Map<String, double> rates) {
-    return unrealizedProfit * (rates[currency] ?? 1);
+    return 0.0; // Nincs profit/loss
   }
 }
 
@@ -146,13 +148,6 @@ class MarketData {
 
   // Stock prices by ticker
   static const Map<String, StockPrice> stockPrices = {
-    'NVDA': StockPrice(currentPrice: 172.41, currency: 'USD'),
-    'AAPL': StockPrice(currentPrice: 175.50, currency: 'USD'),
-    'TSLA': StockPrice(currentPrice: 245.80, currency: 'USD'),
-    'MSFT': StockPrice(currentPrice: 378.50, currency: 'USD'),
-    'OTP': StockPrice(currentPrice: 21300, currency: 'HUF'),
-    'VOD': StockPrice(currentPrice: 286, currency: 'HUF'),
-    'RICHTER': StockPrice(currentPrice: 11200, currency: 'HUF'),
   };
 }
 
@@ -466,211 +461,67 @@ class HistoricalDataGenerator {
 // ============================================================================
 
 class MockPortfolioData {
+  // Singleton pattern
+  static final MockPortfolioData _instance = MockPortfolioData._internal();
+  factory MockPortfolioData() => _instance;
+
   // =========================================================================
   // ACCOUNT 1: TBSZ 2023
-  // Target Total: ~11,671,790 HUF
+  // Fresh account: 0 stocks, only HUF cash
   // =========================================================================
-  final AccountPortfolio tbsz2023 = AccountPortfolio(
-    accountName: 'TBSZ 2023',
-    accountNumber: 'HU12-3456-7890-1234',
-    accountType: 'TBSZ',
-    stocks: [
-      // NVIDIA: 50 × $172.41 = $8,620.50 × 380 = 3,275,790 HUF
-      Stock(
-        name: 'NVIDIA Corp.',
-        ticker: 'NVDA',
-        isin: 'US67066G1040',
-        exchange: 'NASDAQ',
-        quantity: 50,
-        avgPrice: 140.00,
-        currentPrice: 172.41,
-        currency: 'USD',
-        purchaseDate: DateTime(2023, 5, 15),
-      ),
-      // Apple: 80 × $175.50 = $14,040 × 380 = 5,335,200 HUF
-      Stock(
-        name: 'Apple Inc.',
-        ticker: 'AAPL',
-        isin: 'US0378331005',
-        exchange: 'NASDAQ',
-        quantity: 80,
-        avgPrice: 150.00,
-        currentPrice: 175.50,
-        currency: 'USD',
-        purchaseDate: DateTime(2023, 6, 20),
-      ),
-      // OTP: 100 × 21,300 = 2,130,000 HUF
-      Stock(
-        name: 'OTP Bank',
-        ticker: 'OTP',
-        isin: 'HU0000061726',
-        exchange: 'BSE',
-        quantity: 100,
-        avgPrice: 18500,
-        currentPrice: 21300,
-        currency: 'HUF',
-        purchaseDate: DateTime(2023, 4, 10),
-      ),
-    ],
-    funds: [
-      // Concorde Alap: 500,000 HUF
-      Fund(
-        name: 'Concorde Alap',
-        isin: 'HU0000123456',
-        units: 50,
-        unitPrice: 10000,
-        purchasePrice: 9500,
-        currency: 'HUF',
-        purchaseDate: DateTime(2023, 3, 1),
-      ),
-    ],
-    cash: [
-      Cash(currency: 'HUF', amount: 400000),  // 400,000 HUF
-      Cash(currency: 'USD', amount: 100),     // 100 × 380 = 38,000 HUF
-    ],
-    historicalData: HistoricalDataGenerator.generateHistoricalData(
-      currentValue: 11678990, // Current total value in HUF
-      daysBack: 365,
-    ),
-  );
-  // Total TBSZ 2023: 3,275,790 + 5,335,200 + 2,130,000 + 500,000 + 400,000 + 38,000 = 11,678,990 HUF
+  final AccountPortfolio tbsz2023;
+  final AccountPortfolio tbsz2024;
+  final AccountPortfolio ertekpapirSzamla;
 
-  // =========================================================================
-  // ACCOUNT 2: TBSZ 2024
-  // Target Total: ~8,188,830 HUF
-  // =========================================================================
-  final AccountPortfolio tbsz2024 = AccountPortfolio(
-    accountName: 'TBSZ 2024',
-    accountNumber: 'HU98-7654-3210-5678',
-    accountType: 'TBSZ',
-    stocks: [
-      // NVIDIA: 30 × $172.41 = $5,172.30 × 380 = 1,965,474 HUF
-      Stock(
-        name: 'NVIDIA Corp.',
-        ticker: 'NVDA',
-        isin: 'US67066G1040',
-        exchange: 'NASDAQ',
-        quantity: 30,
-        avgPrice: 145.00,
-        currentPrice: 172.41,
-        currency: 'USD',
-        purchaseDate: DateTime(2024, 1, 15),
-      ),
-      // Vodafone: 2220 × 286 = 634,920 HUF
-      Stock(
-        name: 'Vodafone Group',
-        ticker: 'VOD',
-        isin: 'HU0000071234',
-        exchange: 'BSE',
-        quantity: 2220,
-        avgPrice: 340,
-        currentPrice: 286,
-        currency: 'HUF',
-        purchaseDate: DateTime(2024, 2, 10),
-      ),
-      // Tesla: 50 × $245.80 = $12,290 × 380 = 4,670,200 HUF
-      Stock(
-        name: 'Tesla Inc.',
-        ticker: 'TSLA',
-        isin: 'US88160R1014',
-        exchange: 'NASDAQ',
-        quantity: 50,
-        avgPrice: 220.00,
-        currentPrice: 245.80,
-        currency: 'USD',
-        purchaseDate: DateTime(2024, 3, 5),
-      ),
-    ],
-    funds: [
-      // Befektetési Alap: 300,000 HUF
-      Fund(
-        name: 'Befektetési Alap',
-        isin: 'HU0000234567',
-        units: 30,
-        unitPrice: 10000,
-        purchasePrice: 9800,
-        currency: 'HUF',
-        purchaseDate: DateTime(2024, 1, 5),
-      ),
-    ],
-    cash: [
-      Cash(currency: 'HUF', amount: 500000),  // 500,000 HUF
-      Cash(currency: 'USD', amount: 150),     // 150 × 380 = 57,000 HUF
-    ],
-    historicalData: HistoricalDataGenerator.generateHistoricalData(
-      currentValue: 8127594, // Current total value in HUF
-      daysBack: 365,
-    ),
-  );
-  // Total TBSZ 2024: 1,965,474 + 634,920 + 4,670,200 + 300,000 + 500,000 + 57,000 = 8,127,594 HUF
-
-  // =========================================================================
-  // ACCOUNT 3: Értékpapírszámla
-  // Target Total: ~9,508,320 HUF
-  // =========================================================================
-  final AccountPortfolio ertekpapirSzamla = AccountPortfolio(
-    accountName: 'Értékpapírszámla',
-    accountNumber: 'HU45-6789-0123-9876',
-    accountType: 'Normál számla',
-    stocks: [
-      // Microsoft: 40 × $378.50 = $15,140 × 380 = 5,753,200 HUF
-      Stock(
-        name: 'Microsoft Corp.',
-        ticker: 'MSFT',
-        isin: 'US5949181045',
-        exchange: 'NASDAQ',
-        quantity: 40,
-        avgPrice: 320.00,
-        currentPrice: 378.50,
-        currency: 'USD',
-        purchaseDate: DateTime(2023, 8, 12),
-      ),
-      // Richter: 200 × 11,200 = 2,240,000 HUF
-      Stock(
-        name: 'Richter Gedeon',
-        ticker: 'RICHTER',
-        isin: 'HU0000123456',
-        exchange: 'BSE',
-        quantity: 200,
-        avgPrice: 9800,
-        currentPrice: 11200,
-        currency: 'HUF',
-        purchaseDate: DateTime(2023, 9, 5),
-      ),
-      // Vodafone: 1000 × 286 = 286,000 HUF
-      Stock(
-        name: 'Vodafone Group',
-        ticker: 'VOD',
-        isin: 'HU0000071234',
-        exchange: 'BSE',
-        quantity: 1000,
-        avgPrice: 340,
-        currentPrice: 286,
-        currency: 'HUF',
-        purchaseDate: DateTime(2023, 10, 1),
-      ),
-    ],
-    funds: [
-      // Pénzpiaci Alap: 600,000 HUF
-      Fund(
-        name: 'Pénzpiaci Alap',
-        isin: 'HU0000345678',
-        units: 60,
-        unitPrice: 10000,
-        purchasePrice: 9700,
-        currency: 'HUF',
-        purchaseDate: DateTime(2023, 7, 1),
-      ),
-    ],
-    cash: [
-      Cash(currency: 'HUF', amount: 500000),  // 500,000 HUF
-      Cash(currency: 'EUR', amount: 200),     // 200 × 410 = 82,000 HUF
-    ],
-    historicalData: HistoricalDataGenerator.generateHistoricalData(
-      currentValue: 9461200, // Current total value in HUF
-      daysBack: 365,
-    ),
-  );
+  MockPortfolioData._internal()
+      : tbsz2023 = AccountPortfolio(
+          accountName: 'TBSZ-2023',
+          accountNumber: 'HU12-3456-7890-1234',
+          accountType: 'TBSZ',
+          stocks: [], // Üres - nulláról indul
+          funds: [],  // Üres
+          cash: [
+            Cash(currency: 'HUF', amount: 5000000),  // 5,000,000 HUF
+            Cash(currency: 'USD', amount: 10000),    // 10,000 USD
+            Cash(currency: 'EUR', amount: 10000),    // 10,000 EUR
+          ],
+          historicalData: HistoricalDataGenerator.generateHistoricalData(
+            currentValue: 5000000, // Current total value in HUF
+            daysBack: 365,
+          ),
+        ),
+        tbsz2024 = AccountPortfolio(
+          accountName: 'TBSZ-2024',
+          accountNumber: 'HU98-7654-3210-5678',
+          accountType: 'TBSZ',
+          stocks: [],
+          funds: [],
+          cash: [
+            Cash(currency: 'HUF', amount: 3000000),
+            Cash(currency: 'USD', amount: 8000),
+            Cash(currency: 'EUR', amount: 8000),
+          ],
+          historicalData: HistoricalDataGenerator.generateHistoricalData(
+            currentValue: 3000000, // Current total value in HUF
+            daysBack: 365,
+          ),
+        ),
+        ertekpapirSzamla = AccountPortfolio(
+          accountName: 'Értékpapírszámla',
+          accountNumber: 'HU45-6789-0123-9876',
+          accountType: 'Normál számla',
+          stocks: [],
+          funds: [],
+          cash: [
+            Cash(currency: 'HUF', amount: 2000000),
+            Cash(currency: 'USD', amount: 5000),
+            Cash(currency: 'EUR', amount: 5000),
+          ],
+          historicalData: HistoricalDataGenerator.generateHistoricalData(
+            currentValue: 2000000, // Current total value in HUF
+            daysBack: 365,
+          ),
+        );
   // Total Értékpapírszámla: 5,753,200 + 2,240,000 + 286,000 + 600,000 + 500,000 + 82,000 = 9,461,200 HUF
 
   // =========================================================================
@@ -682,8 +533,8 @@ class MockPortfolioData {
   }
 
   AccountPortfolio? getAccountByName(String accountName) {
-    if (accountName == 'TBSZ 2023') return tbsz2023;
-    if (accountName == 'TBSZ 2024') return tbsz2024;
+    if (accountName == 'TBSZ-2023') return tbsz2023;
+    if (accountName == 'TBSZ-2024') return tbsz2024;
     if (accountName == 'Értékpapírszámla') return ertekpapirSzamla;
     return null;
   }
@@ -708,8 +559,7 @@ class MockPortfolioData {
             isin: stock.isin,
             exchange: stock.exchange,
             quantity: newQuantity,
-            avgPrice: newAvgPrice,
-            currentPrice: stock.currentPrice,
+            price: newAvgPrice,
             currency: stock.currency,
             purchaseDate: existing.purchaseDate.isBefore(stock.purchaseDate)
                 ? existing.purchaseDate
@@ -900,8 +750,8 @@ class MockPortfolioData {
 
   Map<String, double> getTotalsByAccount() {
     return {
-      'TBSZ 2023': tbsz2023.totalValue,
-      'TBSZ 2024': tbsz2024.totalValue,
+      'TBSZ-2023': tbsz2023.totalValue,
+      'TBSZ-2024': tbsz2024.totalValue,
       'Értékpapírszámla': ertekpapirSzamla.totalValue,
       'Minden számla': getCombinedPortfolio().totalValue,
     };

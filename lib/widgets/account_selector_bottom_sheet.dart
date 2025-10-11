@@ -6,10 +6,10 @@ class AccountSelectorBottomSheet extends StatefulWidget {
   final Function(String) onAccountSelected;
 
   const AccountSelectorBottomSheet({
-    Key? key,
+    super.key,
     required this.selectedAccount,
     required this.onAccountSelected,
-  }) : super(key: key);
+  });
 
   @override
   State<AccountSelectorBottomSheet> createState() => _AccountSelectorBottomSheetState();

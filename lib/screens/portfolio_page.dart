@@ -7,6 +7,7 @@ import '../widgets/account_selector_bottom_sheet.dart' as account_chooser;
 import '../state/account_state.dart';
 import '../state/currency_state.dart';
 import '../data/mock_portfolio_data.dart';
+import '../services/transaction_service.dart';
 
 // Widget a teljes portfolio oldalhoz (ha külön navigáció kellene)
 class PortfolioPage extends StatelessWidget {
@@ -40,18 +41,27 @@ class _PortfolioContentState extends State<PortfolioContent> {
   final AccountState _accountState = AccountState();
   final CurrencyState _currencyState = CurrencyState();
   final MockPortfolioData _portfolioData = MockPortfolioData();
+  final TransactionService _transactionService = TransactionService();
 
   @override
   void initState() {
     super.initState();
     _accountState.addListener(_onAccountChanged);
     _currencyState.addListener(_onCurrencyChanged);
+    _transactionService.addListener(_onTransactionChanged);
+  }
+
+  void _onTransactionChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
   void dispose() {
     _accountState.removeListener(_onAccountChanged);
     _currencyState.removeListener(_onCurrencyChanged);
+    _transactionService.removeListener(_onTransactionChanged);
     super.dispose();
   }
 
@@ -238,11 +248,19 @@ class _PortfolioContentState extends State<PortfolioContent> {
           ),
         ),
         Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                // Portfolio Summary
-                Container(
+          child: RefreshIndicator(
+            onRefresh: () async {
+              // Trigger a rebuild to refresh data
+              setState(() {});
+              // Small delay for visual feedback
+              await Future.delayed(Duration(milliseconds: 300));
+            },
+            child: SingleChildScrollView(
+              physics: AlwaysScrollableScrollPhysics(),
+              child: Column(
+                children: [
+                  // Portfolio Summary
+                  Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -527,6 +545,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
               ],
             ),
           ),
+        ),
         ),
       ],
     );

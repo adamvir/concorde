@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/market_stocks_data.dart';
 import '../state/favorites_state.dart';
+import 'reszveny_info_page.dart';
 import 'dart:math';
 
 // Widget a teljes kedvencek oldalhoz (ha külön navigáció kellene)
@@ -515,37 +516,49 @@ class _KedvencekContentState extends State<KedvencekContent> {
     required bool isPositive,
     bool isLast = false,
   }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            width: isLast ? 0 : 1,
-            color: const Color(0xFFE2E8F0),
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          // Favorite icon
-          GestureDetector(
-            onTap: () {
-              _favoritesState.toggleFavorite(stock.ticker);
-            },
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              child: Icon(
-                isFavorite ? Icons.star : Icons.star_border,
-                size: 24,
-                color: isFavorite ? const Color(0xFFFFC107) : const Color(0xFF94A3B8),
-              ),
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ReszvenyInfoPage(
+              stockName: stock.name,
+              ticker: stock.ticker,
             ),
           ),
-          SizedBox(width: 8),
-          // Stock info
-          Expanded(
-            child: Column(
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              width: isLast ? 0 : 1,
+              color: const Color(0xFFE2E8F0),
+            ),
+          ),
+        ),
+        child: Row(
+          children: [
+            // Favorite icon
+            GestureDetector(
+              onTap: () {
+                _favoritesState.toggleFavorite(stock.ticker);
+              },
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                child: Icon(
+                  isFavorite ? Icons.star : Icons.star_border,
+                  size: 24,
+                  color: isFavorite ? const Color(0xFFFFC107) : const Color(0xFF94A3B8),
+                ),
+              ),
+            ),
+            SizedBox(width: 8),
+            // Stock info
+            Expanded(
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -620,6 +633,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
           ),
         ],
       ),
+    ),
     );
   }
 

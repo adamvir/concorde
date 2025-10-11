@@ -4,6 +4,9 @@ import '../widgets/account_selector_bottom_sheet.dart';
 import '../state/account_state.dart';
 import '../state/currency_state.dart';
 import '../data/mock_portfolio_data.dart';
+import '../data/market_stocks_data.dart';
+import '../services/transaction_service.dart';
+import 'stock_buy_page.dart';
 
 class ReszvenyInfoPage extends StatelessWidget {
   final String stockName;
@@ -25,6 +28,11 @@ class ReszvenyInfoPage extends StatelessWidget {
   }
 
   Widget _buildBottomNavBar(BuildContext context) {
+    // Get stock data from market
+    MarketStock? marketStock = MarketStocksData.getByTicker(ticker);
+    double currentPrice = marketStock?.currentPrice ?? 0;
+    String currency = marketStock?.currency ?? 'USD';
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -44,7 +52,20 @@ class ReszvenyInfoPage extends StatelessWidget {
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => StockBuyPage(
+                            stockName: stockName,
+                            ticker: ticker,
+                            currentPrice: currentPrice,
+                            currency: currency,
+                            initialTradeType: 'Vétel',
+                          ),
+                        ),
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF009966),
                       foregroundColor: Colors.white,
@@ -74,7 +95,20 @@ class ReszvenyInfoPage extends StatelessWidget {
                 SizedBox(width: 8),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => StockBuyPage(
+                            stockName: stockName,
+                            ticker: ticker,
+                            currentPrice: currentPrice,
+                            currency: currency,
+                            initialTradeType: 'Eladás',
+                          ),
+                        ),
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFEC003F),
                       foregroundColor: Colors.white,
@@ -160,19 +194,28 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
   final AccountState _accountState = AccountState();
   final MockPortfolioData _portfolioData = MockPortfolioData();
   final CurrencyState _currencyState = CurrencyState();
+  final TransactionService _transactionService = TransactionService();
 
   @override
   void initState() {
     super.initState();
     _accountState.addListener(_onAccountChanged);
     _currencyState.addListener(_onCurrencyChanged);
+    _transactionService.addListener(_onTransactionChanged);
   }
 
   @override
   void dispose() {
     _accountState.removeListener(_onAccountChanged);
     _currencyState.removeListener(_onCurrencyChanged);
+    _transactionService.removeListener(_onTransactionChanged);
     super.dispose();
+  }
+
+  void _onTransactionChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _onAccountChanged() {
@@ -283,10 +326,18 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
           ),
           // Summary section
           Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  Container(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                // Trigger a rebuild to refresh data
+                setState(() {});
+                // Small delay for visual feedback
+                await Future.delayed(Duration(milliseconds: 300));
+              },
+              child: SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  children: [
+                    Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -623,6 +674,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                 ],
               ),
             ),
+          ),
           ),
         ],
       ),

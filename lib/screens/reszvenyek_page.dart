@@ -518,11 +518,18 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
 
           // Stock list
           Expanded(
-            child: Builder(
-              builder: (context) {
-                final stocks = _portfolioData.getStocksForAccount(_accountState.selectedAccount);
+            child: RefreshIndicator(
+              onRefresh: () async {
+                // Trigger a rebuild to refresh data
+                setState(() {});
+                // Small delay for visual feedback
+                await Future.delayed(Duration(milliseconds: 300));
+              },
+              child: Builder(
+                builder: (context) {
+                  final stocks = _portfolioData.getStocksForAccount(_accountState.selectedAccount);
 
-                return ListView.builder(
+                  return ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: stocks.length,
                   itemBuilder: (context, index) {
@@ -543,6 +550,7 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
                 );
               },
             ),
+          ),
           ),
         ],
       ),
