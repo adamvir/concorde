@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../data/mock_portfolio_data.dart';
 import '../data/market_stocks_data.dart';
+import '../models/order_model.dart';
 
 enum OrderType { market, limit }
 enum TransactionType { buy, sell }
@@ -27,6 +28,32 @@ class PendingOrder {
   });
 }
 
+class CompletedTransaction {
+  final String ticker;
+  final String stockName;
+  final int quantity;
+  final double price;
+  final double totalValue;
+  final String currency;
+  final String accountName;
+  final TransactionType type;
+  final DateTime completedAt;
+  bool isViewed;
+
+  CompletedTransaction({
+    required this.ticker,
+    required this.stockName,
+    required this.quantity,
+    required this.price,
+    required this.totalValue,
+    required this.currency,
+    required this.accountName,
+    required this.type,
+    required this.completedAt,
+    this.isViewed = false,
+  });
+}
+
 class TransactionService extends ChangeNotifier {
   static final TransactionService _instance = TransactionService._internal();
   factory TransactionService() => _instance;
@@ -34,8 +61,88 @@ class TransactionService extends ChangeNotifier {
 
   final MockPortfolioData _portfolioData = MockPortfolioData();
   final List<PendingOrder> _pendingOrders = [];
+  final List<CompletedTransaction> _completedTransactions = [];
+  final List<Order> _orders = [];
 
   List<PendingOrder> get pendingOrders => List.unmodifiable(_pendingOrders);
+  List<CompletedTransaction> get completedTransactions => List.unmodifiable(_completedTransactions);
+  List<Order> get orders => List.unmodifiable(_orders);
+
+  int get unviewedTransactionCount => _completedTransactions.where((t) => !t.isViewed).length;
+  int get unviewedOrderCount => _orders.where((o) => !o.isViewed && o.status == OrderStatus.open).length;
+
+  void markAllTransactionsAsViewed() {
+    for (var transaction in _completedTransactions) {
+      transaction.isViewed = true;
+    }
+    notifyListeners();
+  }
+
+  void markAllOrdersAsViewed() {
+    for (var order in _orders) {
+      order.isViewed = true;
+    }
+    notifyListeners();
+  }
+
+  // Add a new order
+  String addOrder({
+    required String ticker,
+    required String stockName,
+    required OrderAction action,
+    required int quantity,
+    double? limitPrice,
+    required String currency,
+    required String accountName,
+    DateTime? expiresAt,
+  }) {
+    final orderId = 'ORD_${DateTime.now().millisecondsSinceEpoch}';
+    final order = Order(
+      id: orderId,
+      ticker: ticker,
+      stockName: stockName,
+      action: action,
+      orderedQuantity: quantity,
+      limitPrice: limitPrice,
+      currency: currency,
+      accountName: accountName,
+      createdAt: DateTime.now(),
+      expiresAt: expiresAt,
+      status: OrderStatus.open,
+      isViewed: false,
+    );
+
+    _orders.insert(0, order);
+    notifyListeners();
+    return orderId;
+  }
+
+  // Cancel an order
+  void cancelOrder(String orderId) {
+    final order = _orders.firstWhere((o) => o.id == orderId);
+    order.status = OrderStatus.cancelled;
+    order.isViewed = false;
+    notifyListeners();
+  }
+
+  // Get orders by status
+  List<Order> getOrdersByStatus(OrderStatus status) {
+    return _orders.where((o) => o.status == status).toList();
+  }
+
+  // Get open orders
+  List<Order> get openOrders => getOrdersByStatus(OrderStatus.open);
+
+  // Get completed orders
+  List<Order> get completedOrders => getOrdersByStatus(OrderStatus.completed);
+
+  // Get cancelled orders
+  List<Order> get cancelledOrders => getOrdersByStatus(OrderStatus.cancelled);
+
+  // Get expired orders
+  List<Order> get expiredOrders {
+    return _orders.where((o) => o.isExpired).toList();
+  }
 
   // Execute a buy transaction
   bool executeBuy({
@@ -66,6 +173,19 @@ class TransactionService extends ChangeNotifier {
         type: TransactionType.buy,
         createdAt: DateTime.now(),
       ));
+
+      // Also add to new Order system
+      addOrder(
+        ticker: ticker,
+        stockName: stockName,
+        action: OrderAction.buy,
+        quantity: quantity,
+        limitPrice: price,
+        currency: currency,
+        accountName: accountName,
+        expiresAt: DateTime.now().add(Duration(days: 30)), // Default 30 days
+      );
+
       return true;
     }
 
@@ -160,6 +280,21 @@ class TransactionService extends ChangeNotifier {
 
     print('  ✅ Transaction completed successfully!');
     print('  📈 New stock count in account: ${account.stocks.length}');
+
+    // Add to completed transactions
+    _completedTransactions.insert(0, CompletedTransaction(
+      ticker: ticker,
+      stockName: stockName,
+      quantity: quantity,
+      price: price,
+      totalValue: totalCost,
+      currency: currency,
+      accountName: accountName,
+      type: TransactionType.buy,
+      completedAt: DateTime.now(),
+      isViewed: false,
+    ));
+
     notifyListeners(); // Notify UI of changes
     return true;
   }
@@ -196,6 +331,19 @@ class TransactionService extends ChangeNotifier {
         type: TransactionType.sell,
         createdAt: DateTime.now(),
       ));
+
+      // Also add to new Order system
+      addOrder(
+        ticker: ticker,
+        stockName: stock.name,
+        action: OrderAction.sell,
+        quantity: quantity,
+        limitPrice: price,
+        currency: stock.currency,
+        accountName: accountName,
+        expiresAt: DateTime.now().add(Duration(days: 30)), // Default 30 days
+      );
+
       return true;
     }
 
@@ -238,6 +386,20 @@ class TransactionService extends ChangeNotifier {
         purchaseDate: stock.purchaseDate,
       ));
     }
+
+    // Add to completed transactions
+    _completedTransactions.insert(0, CompletedTransaction(
+      ticker: ticker,
+      stockName: stock.name,
+      quantity: quantity,
+      price: price,
+      totalValue: proceeds,
+      currency: stock.currency,
+      accountName: accountName,
+      type: TransactionType.sell,
+      completedAt: DateTime.now(),
+      isViewed: false,
+    ));
 
     notifyListeners(); // Notify UI of changes
     return true;

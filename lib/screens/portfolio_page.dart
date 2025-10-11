@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'eszkozok_page.dart';
+import 'teljesulesek_page.dart';
 import '../widgets/account_selector_bottom_sheet.dart' as account_chooser;
 import '../state/account_state.dart';
 import '../state/currency_state.dart';
@@ -526,11 +527,22 @@ class _PortfolioContentState extends State<PortfolioContent> {
                         );
                       },
                     ),
-                    _buildNavigationItem(
-                      icon: TablerIcons.circle_check,
-                      title: 'Teljesülések',
-                      badge: '3',
-                      onTap: () {},
+                    AnimatedBuilder(
+                      animation: _transactionService,
+                      builder: (context, _) {
+                        final unviewedCount = _transactionService.unviewedTransactionCount;
+                        return _buildNavigationItem(
+                          icon: TablerIcons.circle_check,
+                          title: 'Teljesülések',
+                          badge: unviewedCount > 0 ? unviewedCount.toString() : null,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => TeljesulasekPage()),
+                            );
+                          },
+                        );
+                      },
                     ),
                     _buildNavigationItem(
                       icon: TablerIcons.file_text,

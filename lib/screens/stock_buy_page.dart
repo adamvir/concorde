@@ -3,6 +3,8 @@ import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import '../services/transaction_service.dart';
 import '../data/market_stocks_data.dart';
 import '../data/mock_portfolio_data.dart';
+import 'order_confirmation_page.dart';
+import '../widgets/order_success_snackbar.dart';
 
 class StockBuyPage extends StatefulWidget {
   final String stockName;
@@ -97,28 +99,52 @@ class _StockBuyPageState extends State<StockBuyPage> {
       return;
     }
 
-    bool success = _transactionService.executeBuy(
-      ticker: widget.ticker,
-      stockName: widget.stockName,
-      quantity: quantity,
-      price: price,
-      accountName: _selectedAccount,
-      orderType: _orderType,
-    );
+    // Navigate to confirmation page
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OrderConfirmationPage(
+          stockName: widget.stockName,
+          ticker: widget.ticker,
+          orderDirection: 'Vétel',
+          orderType: _orderType == OrderType.market ? 'Piaci' : 'Limit',
+          quantity: quantity,
+          price: price,
+          currency: widget.currency,
+          accountName: _selectedAccount,
+          expectedValue: _calculateTotalCost(),
+          onConfirm: () {
+            // Execute the actual transaction
+            bool success = _transactionService.executeBuy(
+              ticker: widget.ticker,
+              stockName: widget.stockName,
+              quantity: quantity,
+              price: price,
+              accountName: _selectedAccount,
+              orderType: _orderType,
+            );
 
-    if (success) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_orderType == OrderType.market
-              ? 'Vétel sikeresen teljesült!'
-              : 'Limit megbízás rögzítve!'),
-          backgroundColor: Color(0xFF009966),
+            if (success) {
+              OrderSuccessSnackbar.show(
+                context: context,
+                orderDirection: 'Vétel',
+                stockName: widget.stockName,
+                quantity: quantity,
+                price: price,
+                currency: widget.currency,
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Nincs elég készpénz! (${_calculateTotalCost().toStringAsFixed(0)} ${widget.currency} szükséges)'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          },
         ),
-      );
-    } else {
-      _showError('Nincs elég készpénz! (${_calculateTotalCost().toStringAsFixed(0)} ${widget.currency} szükséges)');
-    }
+      ),
+    );
   }
 
   void _executeSell() {
@@ -135,27 +161,51 @@ class _StockBuyPageState extends State<StockBuyPage> {
       return;
     }
 
-    bool success = _transactionService.executeSell(
-      ticker: widget.ticker,
-      quantity: quantity,
-      price: price,
-      accountName: _selectedAccount,
-      orderType: _orderType,
-    );
+    // Navigate to confirmation page
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OrderConfirmationPage(
+          stockName: widget.stockName,
+          ticker: widget.ticker,
+          orderDirection: 'Eladás',
+          orderType: _orderType == OrderType.market ? 'Piaci' : 'Limit',
+          quantity: quantity,
+          price: price,
+          currency: widget.currency,
+          accountName: _selectedAccount,
+          expectedValue: _calculateTotalCost(),
+          onConfirm: () {
+            // Execute the actual transaction
+            bool success = _transactionService.executeSell(
+              ticker: widget.ticker,
+              quantity: quantity,
+              price: price,
+              accountName: _selectedAccount,
+              orderType: _orderType,
+            );
 
-    if (success) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_orderType == OrderType.market
-              ? 'Eladás sikeresen teljesült!'
-              : 'Limit megbízás rögzítve!'),
-          backgroundColor: Color(0xFF009966),
+            if (success) {
+              OrderSuccessSnackbar.show(
+                context: context,
+                orderDirection: 'Eladás',
+                stockName: widget.stockName,
+                quantity: quantity,
+                price: price,
+                currency: widget.currency,
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Nincs elég részvény az eladáshoz!'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          },
         ),
-      );
-    } else {
-      _showError('Nincs elég részvény az eladáshoz!');
-    }
+      ),
+    );
   }
 
   void _showError(String message) {
