@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'portfolio_page.dart';
 import 'kedvencek_page.dart';
+import 'news_page.dart';
 
 class MainNavigation extends StatefulWidget {
   final int initialPage;
@@ -28,7 +29,7 @@ class _MainNavigationState extends State<MainNavigation> {
     _pages = [
       PortfolioContent(),
       KedvencekContent(),
-      PlaceholderPage(title: 'Hírek'),
+      NewsContent(),
       PlaceholderPage(title: 'Tőzsde'),
       PlaceholderPage(title: 'Több'),
     ];

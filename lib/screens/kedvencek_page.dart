@@ -613,11 +613,32 @@ class _KedvencekContentState extends State<KedvencekContent> {
                     TextButton(
                       onPressed: () {
                         if (nameController.text.trim().isNotEmpty) {
+                          final newName = nameController.text.trim();
                           _watchlistState.renameWatchlist(
                             currentList.id,
-                            nameController.text.trim(),
+                            newName,
                           );
                           Navigator.pop(context);
+                          // Show snackbar for list rename
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Lista átnevezve: $newName',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                              backgroundColor: const Color(0xFF1D293D),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
                         }
                       },
                       style: TextButton.styleFrom(
@@ -752,8 +773,29 @@ class _KedvencekContentState extends State<KedvencekContent> {
                       // Törlöm a listát button
                       TextButton(
                         onPressed: () {
+                          final deletedListName = currentList.name;
                           _watchlistState.deleteWatchlist(currentList.id);
                           Navigator.pop(context);
+                          // Show snackbar for list deletion
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Lista törölve: $deletedListName',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                              backgroundColor: const Color(0xFF1D293D),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
                         },
                         style: TextButton.styleFrom(
                           shape: RoundedRectangleBorder(
@@ -920,8 +962,29 @@ class _KedvencekContentState extends State<KedvencekContent> {
                     TextButton(
                       onPressed: () {
                         if (nameController.text.trim().isNotEmpty) {
-                          _watchlistState.createWatchlist(nameController.text.trim());
+                          final newListName = nameController.text.trim();
+                          _watchlistState.createWatchlist(newListName);
                           Navigator.pop(context);
+                          // Show snackbar for list creation
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Létrehoztál egy listát: $newListName',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                              backgroundColor: const Color(0xFF1D293D),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
                         }
                       },
                       style: TextButton.styleFrom(
@@ -1787,7 +1850,28 @@ class _KedvencekContentState extends State<KedvencekContent> {
         ) ?? false; // Return false if dialog dismissed without selection
       },
       onDismissed: (direction) {
+        final listName = _watchlistState.selectedWatchlist?.name ?? 'Első';
         _watchlistState.removeStockFromCurrentWatchlist(stock.ticker);
+        // Show snackbar for removal
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Eltávolítva "$listName" listából',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+            backgroundColor: const Color(0xFF1D293D),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
       },
       child: _LongPressableStockRow(
         onLongPress: () {
@@ -1889,8 +1973,29 @@ class _KedvencekContentState extends State<KedvencekContent> {
                             // Eltávolítás button
                             TextButton(
                               onPressed: () {
+                                final listName = _watchlistState.selectedWatchlist?.name ?? 'Első';
                                 _watchlistState.removeStockFromCurrentWatchlist(stock.ticker);
                                 Navigator.pop(context);
+                                // Show snackbar for removal
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Eltávolítva "$listName" listából',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontFamily: 'Inter',
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                    backgroundColor: const Color(0xFF1D293D),
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
                               },
                               style: TextButton.styleFrom(
                                 shape: RoundedRectangleBorder(
@@ -2164,7 +2269,28 @@ class _KedvencekContentState extends State<KedvencekContent> {
         ) ?? false; // Return false if dialog dismissed without selection
       },
       onDismissed: (direction) {
+        final listName = _watchlistState.selectedWatchlist?.name ?? 'Első';
         _watchlistState.removeStockFromCurrentWatchlist(stock.ticker);
+        // Show snackbar for removal
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Eltávolítva "$listName" listából',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+            backgroundColor: const Color(0xFF1D293D),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
       },
       child: _LongPressableStockRow(
       onLongPress: () {
@@ -2268,8 +2394,29 @@ class _KedvencekContentState extends State<KedvencekContent> {
                           // Eltávolítás button
                           TextButton(
                             onPressed: () {
+                              final listName = _watchlistState.selectedWatchlist?.name ?? 'Első';
                               _watchlistState.removeStockFromCurrentWatchlist(stock.ticker);
                               Navigator.pop(context);
+                              // Show snackbar for removal
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Eltávolítva "$listName" listából',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontFamily: 'Inter',
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                  backgroundColor: const Color(0xFF1D293D),
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
                             },
                             style: TextButton.styleFrom(
                               shape: RoundedRectangleBorder(
@@ -2820,10 +2967,51 @@ class _AddFavoriteToListPageState extends State<_AddFavoriteToListPage> {
                 color: isInList ? const Color(0xFF009966) : const Color(0xFF45556C),
               ),
               onPressed: () {
+                final listName = widget.watchlistState.selectedWatchlist?.name ?? 'Első';
                 if (isInList) {
                   widget.watchlistState.removeStockFromCurrentWatchlist(stock.ticker);
+                  // Show snackbar for removal
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Eltávolítva "$listName" listából',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      backgroundColor: const Color(0xFF1D293D),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
                 } else {
                   widget.watchlistState.addStockToCurrentWatchlist(stock.ticker);
+                  // Show snackbar for addition
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Hozzáadva "$listName" listához',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      backgroundColor: const Color(0xFF1D293D),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
                 }
               },
             ),
@@ -3165,8 +3353,29 @@ class _ReorderListPageState extends State<_ReorderListPage> {
                                   // Eltávolítás button
                                   TextButton(
                                     onPressed: () {
+                                      final listName = widget.watchlistState.selectedWatchlist?.name ?? 'Első';
                                       widget.watchlistState.removeStockFromCurrentWatchlist(stock.ticker);
                                       Navigator.pop(context);
+                                      // Show snackbar for removal
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Eltávolítva "$listName" listából',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontFamily: 'Inter',
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                          backgroundColor: const Color(0xFF1D293D),
+                                          behavior: SnackBarBehavior.floating,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          duration: const Duration(seconds: 2),
+                                        ),
+                                      );
                                     },
                                     style: TextButton.styleFrom(
                                       shape: RoundedRectangleBorder(
