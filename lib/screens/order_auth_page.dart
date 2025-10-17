@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import '../services/biometric_auth_service.dart';
+import '../state/theme_state.dart';
+import '../theme/app_colors.dart';
 
 class OrderAuthPage extends StatefulWidget {
   final VoidCallback onSuccess;
@@ -25,6 +27,7 @@ class _OrderAuthPageState extends State<OrderAuthPage> {
   bool _isBiometricAvailable = false;
   String _biometricTypeName = 'Biometrikus azonosítás';
   bool _isAuthenticating = false;
+  final ThemeState _themeState = ThemeState();
 
   // Mock stored PIN for demo - in production this would be securely stored
   final String _storedPin = '123456';
@@ -32,7 +35,20 @@ class _OrderAuthPageState extends State<OrderAuthPage> {
   @override
   void initState() {
     super.initState();
+    _themeState.addListener(_onThemeChanged);
     _checkBiometricAvailability();
+  }
+
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  void dispose() {
+    _themeState.removeListener(_onThemeChanged);
+    super.dispose();
   }
 
   Future<void> _checkBiometricAvailability() async {
@@ -125,19 +141,21 @@ class _OrderAuthPageState extends State<OrderAuthPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: colors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(TablerIcons.arrow_left, color: Color(0xFF1D293D)),
+          icon: Icon(TablerIcons.arrow_left, color: colors.textPrimary),
           onPressed: () => Navigator.pop(context, false),
         ),
         title: Text(
           widget.isEditMode ? 'Megbízás módosításának jóváhagyása' : 'Megbízás jóváhagyása',
-          style: const TextStyle(
-            color: Color(0xFF1D293D),
+          style: TextStyle(
+            color: colors.textPrimary,
             fontSize: 22,
             fontFamily: 'Inter',
             fontWeight: FontWeight.w500,
@@ -150,11 +168,11 @@ class _OrderAuthPageState extends State<OrderAuthPage> {
           child: Column(
             children: [
               const SizedBox(height: 40),
-              const Text(
+              Text(
                 'Írja be a PIN kódot a megbízás\njóváhagyásához',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Color(0xFF1D293D),
+                  color: colors.textPrimary,
                   fontSize: 16,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w400,
@@ -162,7 +180,7 @@ class _OrderAuthPageState extends State<OrderAuthPage> {
                 ),
               ),
               const SizedBox(height: 40),
-              _buildPinDots(),
+              _buildPinDots(colors),
               const SizedBox(height: 40),
               if (_isBiometricAvailable) ...[
                 GestureDetector(
@@ -172,16 +190,16 @@ class _OrderAuthPageState extends State<OrderAuthPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
+                        Icon(
                           TablerIcons.fingerprint,
                           size: 20,
-                          color: Color(0xFF1D293D),
+                          color: colors.textPrimary,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           _biometricTypeName,
-                          style: const TextStyle(
-                            color: Color(0xFF1D293D),
+                          style: TextStyle(
+                            color: colors.textPrimary,
                             fontSize: 16,
                             fontFamily: 'Inter',
                             fontWeight: FontWeight.w400,
@@ -194,7 +212,7 @@ class _OrderAuthPageState extends State<OrderAuthPage> {
                 const SizedBox(height: 20),
               ],
               const Spacer(),
-              _buildKeypad(),
+              _buildKeypad(colors),
               const SizedBox(height: 20),
             ],
           ),
@@ -203,7 +221,7 @@ class _OrderAuthPageState extends State<OrderAuthPage> {
     );
   }
 
-  Widget _buildPinDots() {
+  Widget _buildPinDots(AppColors colors) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(_pinLength, (index) {
@@ -214,19 +232,19 @@ class _OrderAuthPageState extends State<OrderAuthPage> {
           height: 56,
           decoration: BoxDecoration(
             border: Border.all(
-              color: isFilled ? Color(0xFF1D293D) : Color(0xFFCAD5E2),
+              color: isFilled ? colors.textPrimary : colors.inputBorder,
               width: 1,
             ),
             borderRadius: BorderRadius.circular(4),
-            color: Colors.white,
+            color: colors.inputBackground,
           ),
           child: Center(
             child: isFilled
                 ? Container(
                     width: 8,
                     height: 8,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF1D293D),
+                    decoration: BoxDecoration(
+                      color: colors.textPrimary,
                       shape: BoxShape.circle,
                     ),
                   )
@@ -237,36 +255,36 @@ class _OrderAuthPageState extends State<OrderAuthPage> {
     );
   }
 
-  Widget _buildKeypad() {
+  Widget _buildKeypad(AppColors colors) {
     return Column(
       children: [
-        _buildKeypadRow(['1', '2', '3']),
+        _buildKeypadRow(colors, ['1', '2', '3']),
         const SizedBox(height: 12),
-        _buildKeypadRow(['4', '5', '6']),
+        _buildKeypadRow(colors, ['4', '5', '6']),
         const SizedBox(height: 12),
-        _buildKeypadRow(['7', '8', '9']),
+        _buildKeypadRow(colors, ['7', '8', '9']),
         const SizedBox(height: 12),
-        _buildKeypadRow(['', '0', 'back']),
+        _buildKeypadRow(colors, ['', '0', 'back']),
       ],
     );
   }
 
-  Widget _buildKeypadRow(List<String> keys) {
+  Widget _buildKeypadRow(AppColors colors, List<String> keys) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: keys.map((key) {
         if (key.isEmpty) {
           return const SizedBox(width: 80, height: 56);
         } else if (key == 'back') {
-          return _buildBackspaceButton();
+          return _buildBackspaceButton(colors);
         } else {
-          return _buildNumberButton(key);
+          return _buildNumberButton(colors, key);
         }
       }).toList(),
     );
   }
 
-  Widget _buildNumberButton(String number) {
+  Widget _buildNumberButton(AppColors colors, String number) {
     // Determine helper text for each number
     String helperText = '';
     switch (number) {
@@ -311,8 +329,8 @@ class _OrderAuthPageState extends State<OrderAuthPage> {
           children: [
             Text(
               number,
-              style: const TextStyle(
-                color: Color(0xFF1D293D),
+              style: TextStyle(
+                color: colors.textPrimary,
                 fontSize: 24,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w400,
@@ -321,8 +339,8 @@ class _OrderAuthPageState extends State<OrderAuthPage> {
             if (helperText.isNotEmpty)
               Text(
                 helperText,
-                style: const TextStyle(
-                  color: Color(0xFF94A3B8),
+                style: TextStyle(
+                  color: colors.textTertiary,
                   fontSize: 10,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w400,
@@ -334,7 +352,7 @@ class _OrderAuthPageState extends State<OrderAuthPage> {
     );
   }
 
-  Widget _buildBackspaceButton() {
+  Widget _buildBackspaceButton(AppColors colors) {
     return InkWell(
       onTap: _onBackspacePressed,
       borderRadius: BorderRadius.circular(100),
@@ -342,7 +360,7 @@ class _OrderAuthPageState extends State<OrderAuthPage> {
         width: 80,
         height: 56,
         decoration: BoxDecoration(
-          color: const Color(0xFF3B82F6),
+          color: colors.info,
           borderRadius: BorderRadius.circular(100),
         ),
         child: const Icon(

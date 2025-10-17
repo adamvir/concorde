@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import '../services/transaction_service.dart';
 import '../state/account_state.dart';
+import '../state/theme_state.dart';
+import '../theme/app_colors.dart';
 import '../widgets/account_selector_bottom_sheet.dart' as account_chooser;
 import 'package:intl/intl.dart';
 
@@ -15,11 +17,13 @@ class TeljesulasekPage extends StatefulWidget {
 class _TeljesulasekPageState extends State<TeljesulasekPage> {
   final TransactionService _transactionService = TransactionService();
   final AccountState _accountState = AccountState();
+  final ThemeState _themeState = ThemeState();
 
   @override
   void initState() {
     super.initState();
     _accountState.addListener(_onAccountChanged);
+    _themeState.addListener(_onThemeChanged);
     // Mark all transactions as viewed when page opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       try {
@@ -39,10 +43,15 @@ class _TeljesulasekPageState extends State<TeljesulasekPage> {
   @override
   void dispose() {
     _accountState.removeListener(_onAccountChanged);
+    _themeState.removeListener(_onThemeChanged);
     super.dispose();
   }
 
   void _onAccountChanged() {
+    setState(() {});
+  }
+
+  void _onThemeChanged() {
     setState(() {});
   }
 
@@ -94,15 +103,16 @@ class _TeljesulasekPageState extends State<TeljesulasekPage> {
   @override
   Widget build(BuildContext context) {
     final transactions = _getFilteredTransactions();
+    final colors = AppColors(isDark: _themeState.isDark);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: colors.background,
         elevation: 0,
         leadingWidth: 40,
         leading: IconButton(
-          icon: const Icon(TablerIcons.arrow_left, color: Color(0xFF1D293D)),
+          icon: Icon(TablerIcons.arrow_left, color: colors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         titleSpacing: 4,
@@ -111,10 +121,10 @@ class _TeljesulasekPageState extends State<TeljesulasekPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Teljesülések',
                 style: TextStyle(
-                  color: Color(0xFF1D293D),
+                  color: colors.textPrimary,
                   fontSize: 22,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w500,
@@ -123,8 +133,8 @@ class _TeljesulasekPageState extends State<TeljesulasekPage> {
               ),
               Text(
                 _accountState.selectedAccount,
-                style: const TextStyle(
-                  color: Color(0xFF45556C),
+                style: TextStyle(
+                  color: colors.textSecondary,
                   fontSize: 14,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w500,
@@ -137,7 +147,7 @@ class _TeljesulasekPageState extends State<TeljesulasekPage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(TablerIcons.chevron_down, color: Color(0xFF1D293D)),
+            icon: Icon(TablerIcons.chevron_down, color: colors.textPrimary),
             onPressed: _showAccountSelector,
           ),
         ],
@@ -148,13 +158,13 @@ class _TeljesulasekPageState extends State<TeljesulasekPage> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: Color(0xFFF8FAFC),
+            decoration: BoxDecoration(
+              color: colors.surfaceElevated,
             ),
-            child: const Text(
+            child: Text(
               'Az utolsó 2 munkanap teljesülései.',
               style: TextStyle(
-                color: Color(0xFF45556C),
+                color: colors.textSecondary,
                 fontSize: 14,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w400,
@@ -168,11 +178,11 @@ class _TeljesulasekPageState extends State<TeljesulasekPage> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: const BoxDecoration(
-              color: Color(0xFFF8FAFC),
+            decoration: BoxDecoration(
+              color: colors.surfaceElevated,
               border: Border(
-                top: BorderSide(color: Color(0xFFE2E8F0), width: 1),
-                bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1),
+                top: BorderSide(color: colors.border, width: 1),
+                bottom: BorderSide(color: colors.border, width: 1),
               ),
             ),
             child: Column(
@@ -181,11 +191,11 @@ class _TeljesulasekPageState extends State<TeljesulasekPage> {
                 // First row: Termék and Vétel/Eladás
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
+                  children: [
                     Text(
                       'Termék',
                       style: TextStyle(
-                        color: Color(0xFF45556C),
+                        color: colors.textSecondary,
                         fontSize: 12,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -197,7 +207,7 @@ class _TeljesulasekPageState extends State<TeljesulasekPage> {
                       'Vétel / Eladás',
                       textAlign: TextAlign.right,
                       style: TextStyle(
-                        color: Color(0xFF45556C),
+                        color: colors.textSecondary,
                         fontSize: 12,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -211,11 +221,11 @@ class _TeljesulasekPageState extends State<TeljesulasekPage> {
                 // Second row: Össz. darab and Érték
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
+                  children: [
                     Text(
                       'Össz. darab @ átl. ár',
                       style: TextStyle(
-                        color: Color(0xFF45556C),
+                        color: colors.textSecondary,
                         fontSize: 12,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -227,7 +237,7 @@ class _TeljesulasekPageState extends State<TeljesulasekPage> {
                       'Érték',
                       textAlign: TextAlign.right,
                       style: TextStyle(
-                        color: Color(0xFF45556C),
+                        color: colors.textSecondary,
                         fontSize: 12,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -241,11 +251,11 @@ class _TeljesulasekPageState extends State<TeljesulasekPage> {
                 // Third row: Teljesülés ideje and Számla
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
+                  children: [
                     Text(
                       'Teljesülés ideje',
                       style: TextStyle(
-                        color: Color(0xFF45556C),
+                        color: colors.textSecondary,
                         fontSize: 12,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -257,7 +267,7 @@ class _TeljesulasekPageState extends State<TeljesulasekPage> {
                       'Számla',
                       textAlign: TextAlign.right,
                       style: TextStyle(
-                        color: Color(0xFF45556C),
+                        color: colors.textSecondary,
                         fontSize: 12,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -274,11 +284,11 @@ class _TeljesulasekPageState extends State<TeljesulasekPage> {
           // Transaction list
           Expanded(
             child: transactions.isEmpty
-                ? const Center(
+                ? Center(
                     child: Text(
                       'Nincs teljesült megbízás',
                       style: TextStyle(
-                        color: Color(0xFF45556C),
+                        color: colors.textSecondary,
                         fontSize: 16,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w400,
@@ -298,9 +308,9 @@ class _TeljesulasekPageState extends State<TeljesulasekPage> {
                       return Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           border: Border(
-                            bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1),
+                            bottom: BorderSide(color: colors.border, width: 1),
                           ),
                         ),
                         child: Column(
@@ -312,8 +322,8 @@ class _TeljesulasekPageState extends State<TeljesulasekPage> {
                               children: [
                                 Text(
                                   transaction.stockName,
-                                  style: const TextStyle(
-                                    color: Color(0xFF1D293D),
+                                  style: TextStyle(
+                                    color: colors.textPrimary,
                                     fontSize: 16,
                                     fontFamily: 'Inter',
                                     fontWeight: FontWeight.w500,
@@ -325,7 +335,7 @@ class _TeljesulasekPageState extends State<TeljesulasekPage> {
                                   isBuy ? 'Vétel' : 'Eladás',
                                   textAlign: TextAlign.right,
                                   style: TextStyle(
-                                    color: isBuy ? const Color(0xFF009966) : const Color(0xFFEC003F),
+                                    color: isBuy ? colors.success : colors.error,
                                     fontSize: 16,
                                     fontFamily: 'Inter',
                                     fontWeight: FontWeight.w400,
@@ -342,8 +352,8 @@ class _TeljesulasekPageState extends State<TeljesulasekPage> {
                               children: [
                                 Text(
                                   '${transaction.quantity} db @ ${transaction.price.toStringAsFixed(2).replaceAll('.', ',')} ${transaction.currency}',
-                                  style: const TextStyle(
-                                    color: Color(0xFF45556C),
+                                  style: TextStyle(
+                                    color: colors.textSecondary,
                                     fontSize: 14,
                                     fontFamily: 'Inter',
                                     fontWeight: FontWeight.w400,
@@ -354,8 +364,8 @@ class _TeljesulasekPageState extends State<TeljesulasekPage> {
                                 Text(
                                   '$formattedValue ${transaction.currency}',
                                   textAlign: TextAlign.right,
-                                  style: const TextStyle(
-                                    color: Color(0xFF1D293D),
+                                  style: TextStyle(
+                                    color: colors.textPrimary,
                                     fontSize: 16,
                                     fontFamily: 'Inter',
                                     fontWeight: FontWeight.w400,
@@ -372,8 +382,8 @@ class _TeljesulasekPageState extends State<TeljesulasekPage> {
                               children: [
                                 Text(
                                   _formatTransactionTime(transaction.completedAt),
-                                  style: const TextStyle(
-                                    color: Color(0xFF45556C),
+                                  style: TextStyle(
+                                    color: colors.textSecondary,
                                     fontSize: 14,
                                     fontFamily: 'Inter',
                                     fontWeight: FontWeight.w400,
@@ -384,8 +394,8 @@ class _TeljesulasekPageState extends State<TeljesulasekPage> {
                                 Text(
                                   transaction.accountName,
                                   textAlign: TextAlign.right,
-                                  style: const TextStyle(
-                                    color: Color(0xFF45556C),
+                                  style: TextStyle(
+                                    color: colors.textSecondary,
                                     fontSize: 14,
                                     fontFamily: 'Inter',
                                     fontWeight: FontWeight.w400,

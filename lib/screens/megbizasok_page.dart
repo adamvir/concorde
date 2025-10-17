@@ -3,6 +3,8 @@ import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import '../services/transaction_service.dart';
 import '../models/order_model.dart';
 import '../state/account_state.dart';
+import '../state/theme_state.dart';
+import '../theme/app_colors.dart';
 import '../widgets/account_selector_bottom_sheet.dart' as account_chooser;
 import 'package:intl/intl.dart';
 import 'order_detail_page.dart';
@@ -17,6 +19,7 @@ class MegbizasokPage extends StatefulWidget {
 class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProviderStateMixin {
   final TransactionService _transactionService = TransactionService();
   final AccountState _accountState = AccountState();
+  final ThemeState _themeState = ThemeState();
   late TabController _tabController;
 
   @override
@@ -24,6 +27,7 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
     _accountState.addListener(_onAccountChanged);
+    _themeState.addListener(_onThemeChanged);
 
     // Mark all orders as viewed when page opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -40,11 +44,18 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
   void dispose() {
     _tabController.dispose();
     _accountState.removeListener(_onAccountChanged);
+    _themeState.removeListener(_onThemeChanged);
     super.dispose();
   }
 
   void _onAccountChanged() {
     setState(() {});
+  }
+
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _showAccountSelector() {
@@ -104,14 +115,16 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: colors.background,
         elevation: 0,
         leadingWidth: 40,
         leading: IconButton(
-          icon: const Icon(TablerIcons.arrow_left, color: Color(0xFF1D293D)),
+          icon: Icon(TablerIcons.arrow_left, color: colors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         titleSpacing: 4,
@@ -120,10 +133,10 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Megbízások',
                 style: TextStyle(
-                  color: Color(0xFF1D293D),
+                  color: colors.textPrimary,
                   fontSize: 22,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w500,
@@ -132,8 +145,8 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
               ),
               Text(
                 _accountState.selectedAccount,
-                style: const TextStyle(
-                  color: Color(0xFF45556C),
+                style: TextStyle(
+                  color: colors.textSecondary,
                   fontSize: 14,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w500,
@@ -146,16 +159,16 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
         ),
         actions: [
           IconButton(
-            icon: const Icon(TablerIcons.chevron_down, color: Color(0xFF1D293D)),
+            icon: Icon(TablerIcons.chevron_down, color: colors.textPrimary),
             onPressed: _showAccountSelector,
           ),
         ],
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: const Color(0xFF1D293D),
+          indicatorColor: colors.textPrimary,
           indicatorWeight: 3,
-          labelColor: const Color(0xFF1D293D),
-          unselectedLabelColor: const Color(0xFF45556C),
+          labelColor: colors.textPrimary,
+          unselectedLabelColor: colors.textSecondary,
           labelStyle: const TextStyle(
             fontSize: 14,
             fontFamily: 'Inter',
@@ -192,20 +205,21 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
 
   Widget _buildOrderList(OrderStatus status) {
     final orders = _getFilteredOrders(status);
+    final colors = AppColors(isDark: _themeState.isDark);
 
     return RefreshIndicator(
       onRefresh: _refreshOrders,
-      color: const Color(0xFF009966),
+      color: colors.success,
       child: Column(
         children: [
           // Table header
           Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: const BoxDecoration(
-            color: Color(0xFFF8FAFC),
+          decoration: BoxDecoration(
+            color: colors.surfaceElevated,
             border: Border(
-              bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1),
+              bottom: BorderSide(color: colors.border, width: 1),
             ),
           ),
           child: Column(
@@ -213,11 +227,11 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
+                children: [
                   Text(
                     'Termék',
                     style: TextStyle(
-                      color: Color(0xFF45556C),
+                      color: colors.textSecondary,
                       fontSize: 12,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,
@@ -229,7 +243,7 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
                     'Vétel / Eladás',
                     textAlign: TextAlign.right,
                     style: TextStyle(
-                      color: Color(0xFF45556C),
+                      color: colors.textSecondary,
                       fontSize: 12,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,
@@ -242,11 +256,11 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
               const SizedBox(height: 4),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
+                children: [
                   Text(
                     'Megbízás darab @ ár',
                     style: TextStyle(
-                      color: Color(0xFF45556C),
+                      color: colors.textSecondary,
                       fontSize: 12,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,
@@ -258,7 +272,7 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
                     'Megbízás érték',
                     textAlign: TextAlign.right,
                     style: TextStyle(
-                      color: Color(0xFF45556C),
+                      color: colors.textSecondary,
                       fontSize: 12,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,
@@ -271,11 +285,11 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
               const SizedBox(height: 4),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
+                children: [
                   Text(
                     'Teljesült darab @ ár',
                     style: TextStyle(
-                      color: Color(0xFF45556C),
+                      color: colors.textSecondary,
                       fontSize: 12,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,
@@ -287,7 +301,7 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
                     'Teljesült érték',
                     textAlign: TextAlign.right,
                     style: TextStyle(
-                      color: Color(0xFF45556C),
+                      color: colors.textSecondary,
                       fontSize: 12,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,
@@ -300,11 +314,11 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
               const SizedBox(height: 4),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
+                children: [
                   Text(
                     'Számla',
                     style: TextStyle(
-                      color: Color(0xFF45556C),
+                      color: colors.textSecondary,
                       fontSize: 12,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,
@@ -316,7 +330,7 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
                     'Beadás ideje',
                     textAlign: TextAlign.right,
                     style: TextStyle(
-                      color: Color(0xFF45556C),
+                      color: colors.textSecondary,
                       fontSize: 12,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,
@@ -333,11 +347,11 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
         // Orders list
         Expanded(
           child: orders.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text(
                     'Nincs megbízás',
                     style: TextStyle(
-                      color: Color(0xFF45556C),
+                      color: colors.textSecondary,
                       fontSize: 16,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w400,
@@ -355,17 +369,17 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
                         height: 48,
                         margin: const EdgeInsets.symmetric(vertical: 16),
                         decoration: BoxDecoration(
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          border: Border.all(color: colors.border),
                           borderRadius: BorderRadius.circular(100),
                         ),
                         child: TextButton(
                           onPressed: () {
                             // TODO: Load more
                           },
-                          child: const Text(
+                          child: Text(
                             'További 30 nap betöltése',
                             style: TextStyle(
-                              color: Color(0xFF45556C),
+                              color: colors.textSecondary,
                               fontSize: 14,
                               fontFamily: 'Inter',
                               fontWeight: FontWeight.w500,
@@ -387,6 +401,7 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
   }
 
   Widget _buildOrderItem(Order order) {
+    final colors = AppColors(isDark: _themeState.isDark);
     final isBuy = order.action == OrderAction.buy;
     final formattedOrderValue = NumberFormat('#,##0.00', 'en_US')
         .format(order.orderedValue)
@@ -407,9 +422,9 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
       child: Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1),
+          bottom: BorderSide(color: colors.border, width: 1),
         ),
       ),
       child: Column(
@@ -422,8 +437,8 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
             children: [
               Text(
                 order.stockName,
-                style: const TextStyle(
-                  color: Color(0xFF1D293D),
+                style: TextStyle(
+                  color: colors.textPrimary,
                   fontSize: 16,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w500,
@@ -435,7 +450,7 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
                 isBuy ? 'Vétel' : 'Eladás',
                 textAlign: TextAlign.right,
                 style: TextStyle(
-                  color: isBuy ? const Color(0xFF009966) : const Color(0xFFEC003F),
+                  color: isBuy ? colors.success : colors.error,
                   fontSize: 16,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w400,
@@ -452,12 +467,12 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
             children: [
               Row(
                 children: [
-                  const Icon(TablerIcons.file_text, size: 20, color: Color(0xFF45556C)),
+                  Icon(TablerIcons.file_text, size: 20, color: colors.textSecondary),
                   const SizedBox(width: 2),
                   Text(
                     '${order.orderedQuantity} db @ ${order.isMarketOrder ? "Piaci" : order.limitPrice!.toStringAsFixed(2).replaceAll('.', ',')}',
-                    style: const TextStyle(
-                      color: Color(0xFF45556C),
+                    style: TextStyle(
+                      color: colors.textSecondary,
                       fontSize: 14,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w400,
@@ -470,8 +485,8 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
               Text(
                 order.isMarketOrder ? 'Piaci ár' : '$formattedOrderValue ${order.currency}',
                 textAlign: TextAlign.right,
-                style: const TextStyle(
-                  color: Color(0xFF1D293D),
+                style: TextStyle(
+                  color: colors.textPrimary,
                   fontSize: 16,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w400,
@@ -488,12 +503,12 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
             children: [
               Row(
                 children: [
-                  const Icon(TablerIcons.circle_check, size: 20, color: Color(0xFF45556C)),
+                  Icon(TablerIcons.circle_check, size: 20, color: colors.textSecondary),
                   const SizedBox(width: 2),
                   Text(
                     '${order.fulfilledQuantity} db @ ${order.limitPrice != null ? order.limitPrice!.toStringAsFixed(2).replaceAll('.', ',') : "0,00"}',
-                    style: const TextStyle(
-                      color: Color(0xFF45556C),
+                    style: TextStyle(
+                      color: colors.textSecondary,
                       fontSize: 14,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w400,
@@ -506,8 +521,8 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
               Text(
                 '$formattedFulfilledValue ${order.currency}',
                 textAlign: TextAlign.right,
-                style: const TextStyle(
-                  color: Color(0xFF1D293D),
+                style: TextStyle(
+                  color: colors.textPrimary,
                   fontSize: 16,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w400,
@@ -534,13 +549,13 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
                       height: 32,
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         borderRadius: BorderRadius.circular(100),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Nyitott megbízás',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: colors.background,
                           fontSize: 12,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -553,13 +568,13 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
                       height: 32,
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         borderRadius: BorderRadius.circular(100),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Nyitott megbízás',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: colors.background,
                           fontSize: 12,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -572,13 +587,13 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
                       height: 32,
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         borderRadius: BorderRadius.circular(100),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Részlegjesen törölt',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: colors.background,
                           fontSize: 12,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -591,13 +606,13 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
                       height: 32,
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         borderRadius: BorderRadius.circular(100),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Törölt',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: colors.background,
                           fontSize: 12,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -610,13 +625,13 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
                       height: 32,
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         borderRadius: BorderRadius.circular(100),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Teljesült',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: colors.background,
                           fontSize: 12,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -629,13 +644,13 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
                       height: 32,
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         borderRadius: BorderRadius.circular(100),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Törölt',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: colors.background,
                           fontSize: 12,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -652,19 +667,19 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
                       height: 32,
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFAF8FF),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        color: colors.badgeBackground,
+                        border: Border.all(color: colors.border),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(TablerIcons.arrow_badge_up, size: 18, color: Color(0xFF45556C)),
+                          Icon(TablerIcons.arrow_badge_up, size: 18, color: colors.textSecondary),
                           const SizedBox(width: 4),
                           Text(
                             '${order.limitPrice!.toStringAsFixed(2).replaceAll('.', ',')} ${order.currency}',
-                            style: const TextStyle(
-                              color: Color(0xFF45556C),
+                            style: TextStyle(
+                              color: colors.textSecondary,
                               fontSize: 12,
                               fontFamily: 'Inter',
                               fontWeight: FontWeight.w500,
@@ -682,14 +697,14 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
                     height: 32,
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFAF8FF),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      color: colors.badgeBackground,
+                      border: Border.all(color: colors.border),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       order.accountName,
-                      style: const TextStyle(
-                        color: Color(0xFF45556C),
+                      style: TextStyle(
+                        color: colors.textSecondary,
                         fontSize: 12,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -708,8 +723,8 @@ class _MegbizasokPageState extends State<MegbizasokPage> with SingleTickerProvid
                   child: Text(
                     _formatOrderTime(order.createdAt),
                     textAlign: TextAlign.right,
-                    style: const TextStyle(
-                      color: Color(0xFF45556C),
+                    style: TextStyle(
+                      color: colors.textSecondary,
                       fontSize: 14,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w400,

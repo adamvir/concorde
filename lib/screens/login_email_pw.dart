@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cc_new/screens/login_hiteles_sms.dart';
+import '../state/theme_state.dart' as app_theme;
+import '../theme/app_colors.dart';
 
 class LoginEmailPw extends StatefulWidget {
   const LoginEmailPw({super.key});
@@ -14,15 +16,28 @@ class _LoginEmailPwState extends State<LoginEmailPw> {
   final _userCodeController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  final app_theme.ThemeState _themeState = app_theme.ThemeState();
+
+  @override
+  void initState() {
+    super.initState();
+    _themeState.addListener(_onThemeChanged);
+  }
+
+  void _onThemeChanged() {
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Background circle decoration (bottom left)
+          // Background circle decoration (bottom left) - brand color, always visible
           Positioned(
             left: -300,
             bottom: -620,
@@ -33,7 +48,7 @@ class _LoginEmailPwState extends State<LoginEmailPw> {
                 shape: OvalBorder(
                   side: BorderSide(
                     width: 60,
-                    color: const Color(0xFFFD9A00),
+                    color: colors.primary,
                   ),
                 ),
               ),
@@ -60,10 +75,11 @@ class _LoginEmailPwState extends State<LoginEmailPw> {
                     // User code field
                     TextField(
                       controller: _userCodeController,
+                      style: TextStyle(color: colors.textPrimary),
                       decoration: InputDecoration(
                         labelText: 'Ügyfélkód',
                         labelStyle: TextStyle(
-                          color: const Color(0xFF45556C),
+                          color: colors.textSecondary,
                           fontSize: 16,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w400,
@@ -72,14 +88,14 @@ class _LoginEmailPwState extends State<LoginEmailPw> {
                           borderRadius: BorderRadius.circular(4),
                           borderSide: BorderSide(
                             width: 1,
-                            color: const Color(0xFFCAD5E2),
+                            color: colors.inputBorder,
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(4),
                           borderSide: BorderSide(
                             width: 2,
-                            color: const Color(0xFF1D293D),
+                            color: colors.textPrimary,
                           ),
                         ),
                         contentPadding: EdgeInsets.symmetric(
@@ -93,10 +109,11 @@ class _LoginEmailPwState extends State<LoginEmailPw> {
                     TextField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
+                      style: TextStyle(color: colors.textPrimary),
                       decoration: InputDecoration(
                         labelText: 'Jelszó',
                         labelStyle: TextStyle(
-                          color: const Color(0xFF45556C),
+                          color: colors.textSecondary,
                           fontSize: 16,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w400,
@@ -105,14 +122,14 @@ class _LoginEmailPwState extends State<LoginEmailPw> {
                           borderRadius: BorderRadius.circular(4),
                           borderSide: BorderSide(
                             width: 1,
-                            color: const Color(0xFFCAD5E2),
+                            color: colors.inputBorder,
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(4),
                           borderSide: BorderSide(
                             width: 2,
-                            color: const Color(0xFF1D293D),
+                            color: colors.textPrimary,
                           ),
                         ),
                         contentPadding: EdgeInsets.symmetric(
@@ -124,7 +141,7 @@ class _LoginEmailPwState extends State<LoginEmailPw> {
                             _obscurePassword
                                 ? TablerIcons.eye_off
                                 : TablerIcons.eye,
-                            color: const Color(0xFF45556C),
+                            color: colors.textSecondary,
                           ),
                           onPressed: () {
                             setState(() {
@@ -141,8 +158,8 @@ class _LoginEmailPwState extends State<LoginEmailPw> {
                       child: ElevatedButton(
                         onPressed: _handleLogin,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1D293D),
-                          foregroundColor: Colors.white,
+                          backgroundColor: colors.textPrimary,
+                          foregroundColor: colors.background,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(100),
                           ),
@@ -173,10 +190,10 @@ class _LoginEmailPwState extends State<LoginEmailPw> {
                       child: OutlinedButton(
                         onPressed: _handleOpenAccount,
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF45556C),
+                          foregroundColor: colors.textSecondary,
                           side: BorderSide(
                             width: 1,
-                            color: const Color(0xFFE2E8F0),
+                            color: colors.border,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(100),
@@ -210,13 +227,13 @@ class _LoginEmailPwState extends State<LoginEmailPw> {
                           Icon(
                             TablerIcons.lock_question,
                             size: 22,
-                            color: const Color(0xFF45556C),
+                            color: colors.textSecondary,
                           ),
                           SizedBox(width: 8),
                           Text(
                             'Elfelejtette a jelszavát?',
                             style: TextStyle(
-                              color: const Color(0xFF45556C),
+                              color: colors.textSecondary,
                               fontSize: 14,
                               fontFamily: 'Inter',
                               fontWeight: FontWeight.w500,
@@ -260,6 +277,7 @@ class _LoginEmailPwState extends State<LoginEmailPw> {
 
   @override
   void dispose() {
+    _themeState.removeListener(_onThemeChanged);
     _userCodeController.dispose();
     _passwordController.dispose();
     super.dispose();

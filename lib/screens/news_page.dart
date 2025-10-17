@@ -4,6 +4,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../services/news_service.dart';
 import '../models/news_article.dart';
 import '../data/market_stocks_data.dart';
+import '../state/theme_state.dart' as app_theme;
+import '../theme/app_colors.dart';
 
 // Widget a teljes hírek oldalhoz
 class NewsPage extends StatelessWidget {
@@ -11,8 +13,11 @@ class NewsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeState = app_theme.ThemeState();
+    final colors = AppColors(isDark: themeState.isDark);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: SafeArea(
         bottom: false,
         child: NewsContent(),
@@ -34,11 +39,25 @@ class _NewsContentState extends State<NewsContent> {
   List<NewsArticle> _articles = [];
   bool _isLoading = false;
   String? _currentTicker;
+  final app_theme.ThemeState _themeState = app_theme.ThemeState();
 
   @override
   void initState() {
     super.initState();
+    _themeState.addListener(_onThemeChanged);
     _loadDefaultNews();
+  }
+
+  @override
+  void dispose() {
+    _themeState.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   // Load default news feed
@@ -84,26 +103,28 @@ class _NewsContentState extends State<NewsContent> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Column(
       children: [
         // Header with logo, title, search and notification icons
-        _buildHeader(),
+        _buildHeader(colors),
 
         // Newsletter dropdown selector
-        _buildNewsletterSelector(),
+        _buildNewsletterSelector(colors),
 
         const SizedBox(height: 8),
 
         // News feed
         Expanded(
-          child: _buildNewsFeed(),
+          child: _buildNewsFeed(colors),
         ),
       ],
     );
   }
 
   // Build header with Concorde logo, title, search and bell icons
-  Widget _buildHeader() {
+  Widget _buildHeader(AppColors colors) {
     return Container(
       width: double.infinity,
       height: 64,
@@ -129,7 +150,7 @@ class _NewsContentState extends State<NewsContent> {
               child: Text(
                 'Hírek',
                 style: TextStyle(
-                  color: const Color(0xFF1D293D),
+                  color: colors.textPrimary,
                   fontSize: 22,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w500,
@@ -145,11 +166,11 @@ class _NewsContentState extends State<NewsContent> {
             child: IconButton(
               icon: Icon(
                 TablerIcons.search,
-                color: const Color(0xFF45556C),
+                color: colors.textSecondary,
                 size: 24,
               ),
               onPressed: () {
-                _showTickerSearch();
+                _showTickerSearch(colors);
               },
             ),
           ),
@@ -160,7 +181,7 @@ class _NewsContentState extends State<NewsContent> {
             child: IconButton(
               icon: Icon(
                 TablerIcons.bell,
-                color: const Color(0xFF45556C),
+                color: colors.textSecondary,
                 size: 24,
               ),
               onPressed: () {
@@ -174,7 +195,7 @@ class _NewsContentState extends State<NewsContent> {
   }
 
   // Build newsletter dropdown selector
-  Widget _buildNewsletterSelector() {
+  Widget _buildNewsletterSelector(AppColors colors) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -183,7 +204,7 @@ class _NewsContentState extends State<NewsContent> {
         decoration: BoxDecoration(
           border: Border.all(
             width: 1,
-            color: const Color(0xFFCAD5E2),
+            color: colors.inputBorder,
           ),
           borderRadius: BorderRadius.circular(4),
         ),
@@ -191,7 +212,7 @@ class _NewsContentState extends State<NewsContent> {
           color: Colors.transparent,
           child: InkWell(
             onTap: () {
-              _showNewsletterPicker();
+              _showNewsletterPicker(colors);
             },
             borderRadius: BorderRadius.circular(4),
             child: Padding(
@@ -202,7 +223,7 @@ class _NewsContentState extends State<NewsContent> {
                     child: Text(
                       _selectedNewsletter,
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 16,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w400,
@@ -213,7 +234,7 @@ class _NewsContentState extends State<NewsContent> {
                   ),
                   Icon(
                     TablerIcons.chevron_down,
-                    color: const Color(0xFF45556C),
+                    color: colors.textSecondary,
                     size: 24,
                   ),
                 ],
@@ -226,9 +247,10 @@ class _NewsContentState extends State<NewsContent> {
   }
 
   // Show newsletter picker dialog
-  void _showNewsletterPicker() {
+  void _showNewsletterPicker(AppColors colors) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: colors.cardBackground,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -244,11 +266,12 @@ class _NewsContentState extends State<NewsContent> {
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   fontFamily: 'Inter',
+                  color: colors.textPrimary,
                 ),
               ),
               const SizedBox(height: 16),
               ListTile(
-                title: Text('Concorde napi hírlevél'),
+                title: Text('Concorde napi hírlevél', style: TextStyle(color: colors.textPrimary)),
                 onTap: () {
                   setState(() {
                     _selectedNewsletter = 'Concorde napi hírlevél';
@@ -257,7 +280,7 @@ class _NewsContentState extends State<NewsContent> {
                 },
               ),
               ListTile(
-                title: Text('Tech hírek'),
+                title: Text('Tech hírek', style: TextStyle(color: colors.textPrimary)),
                 onTap: () {
                   setState(() {
                     _selectedNewsletter = 'Tech hírek';
@@ -266,7 +289,7 @@ class _NewsContentState extends State<NewsContent> {
                 },
               ),
               ListTile(
-                title: Text('Piaci elemzések'),
+                title: Text('Piaci elemzések', style: TextStyle(color: colors.textPrimary)),
                 onTap: () {
                   setState(() {
                     _selectedNewsletter = 'Piaci elemzések';
@@ -282,11 +305,11 @@ class _NewsContentState extends State<NewsContent> {
   }
 
   // Show ticker search dialog
-  void _showTickerSearch() {
+  void _showTickerSearch(AppColors colors) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: Colors.white,
+        backgroundColor: colors.cardBackground,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -301,7 +324,7 @@ class _NewsContentState extends State<NewsContent> {
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: const Color(0xFFE2E8F0),
+                      color: colors.border,
                       width: 1,
                     ),
                   ),
@@ -312,7 +335,7 @@ class _NewsContentState extends State<NewsContent> {
                       child: Text(
                         'Keresés ticker alapján',
                         style: TextStyle(
-                          color: const Color(0xFF1D293D),
+                          color: colors.textPrimary,
                           fontSize: 18,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w600,
@@ -320,7 +343,7 @@ class _NewsContentState extends State<NewsContent> {
                       ),
                     ),
                     IconButton(
-                      icon: Icon(TablerIcons.x, size: 24),
+                      icon: Icon(TablerIcons.x, size: 24, color: colors.textSecondary),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
@@ -330,16 +353,22 @@ class _NewsContentState extends State<NewsContent> {
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: TextField(
+                  style: TextStyle(color: colors.textPrimary),
                   decoration: InputDecoration(
                     hintText: 'Írd be a ticker kódot (pl. NVDA, AAPL)',
-                    prefixIcon: Icon(TablerIcons.search),
+                    hintStyle: TextStyle(color: colors.textTertiary),
+                    prefixIcon: Icon(TablerIcons.search, color: colors.textSecondary),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: const Color(0xFFCAD5E2)),
+                      borderSide: BorderSide(color: colors.inputBorder),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: colors.inputBorder),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: const Color(0xFFE17100), width: 2),
+                      borderSide: BorderSide(color: colors.primary, width: 2),
                     ),
                   ),
                   textCapitalization: TextCapitalization.characters,
@@ -366,13 +395,14 @@ class _NewsContentState extends State<NewsContent> {
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontFamily: 'Inter',
+                          color: colors.textPrimary,
                         ),
                       ),
                       subtitle: Text(
                         stock.name,
                         style: TextStyle(
                           fontSize: 14,
-                          color: const Color(0xFF64748B),
+                          color: colors.textSecondary,
                           fontFamily: 'Inter',
                         ),
                       ),
@@ -392,11 +422,11 @@ class _NewsContentState extends State<NewsContent> {
   }
 
   // Build news feed with article cards
-  Widget _buildNewsFeed() {
+  Widget _buildNewsFeed(AppColors colors) {
     if (_isLoading) {
       return Center(
         child: CircularProgressIndicator(
-          color: const Color(0xFFE17100),
+          color: colors.primary,
         ),
       );
     }
@@ -409,7 +439,7 @@ class _NewsContentState extends State<NewsContent> {
             Icon(
               TablerIcons.news_off,
               size: 64,
-              color: const Color(0xFF94A3B8),
+              color: colors.textTertiary,
             ),
             const SizedBox(height: 16),
             Text(
@@ -417,7 +447,7 @@ class _NewsContentState extends State<NewsContent> {
                   ? 'Nincs elérhető hír a $_currentTicker tickerhez'
                   : 'Nincs elérhető hír',
               style: TextStyle(
-                color: const Color(0xFF64748B),
+                color: colors.textSecondary,
                 fontSize: 16,
                 fontFamily: 'Inter',
               ),
@@ -426,7 +456,7 @@ class _NewsContentState extends State<NewsContent> {
             ElevatedButton(
               onPressed: _loadDefaultNews,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE17100),
+                backgroundColor: colors.buttonPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -447,7 +477,7 @@ class _NewsContentState extends State<NewsContent> {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: const Color(0xFFE2E8F0),
+            color: colors.divider,
           ),
         ),
       ),
@@ -458,13 +488,14 @@ class _NewsContentState extends State<NewsContent> {
             return Column(
               children: [
                 const SizedBox(height: 16),
-                _buildLoadMoreButton(),
+                _buildLoadMoreButton(colors),
               ],
             );
           }
 
           final article = _articles[index];
           return _buildNewsArticleFromModel(
+            colors: colors,
             article: article,
             isLast: index == _articles.length - 1,
           );
@@ -594,6 +625,7 @@ class _NewsContentState extends State<NewsContent> {
 
   // Build news article card from NewsArticle model
   Widget _buildNewsArticleFromModel({
+    required AppColors colors,
     required NewsArticle article,
     bool isLast = false,
   }) {
@@ -603,7 +635,7 @@ class _NewsContentState extends State<NewsContent> {
         border: Border(
           bottom: BorderSide(
             width: isLast ? 0 : 1,
-            color: const Color(0xFFE2E8F0),
+            color: colors.border,
           ),
         ),
       ),
@@ -626,7 +658,7 @@ class _NewsContentState extends State<NewsContent> {
                     Text(
                       article.title,
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 16,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -645,7 +677,7 @@ class _NewsContentState extends State<NewsContent> {
                           child: Text(
                             article.source,
                             style: TextStyle(
-                              color: const Color(0xFFE17100),
+                              color: colors.primary,
                               fontSize: 14,
                               fontFamily: 'Inter',
                               fontWeight: FontWeight.w500,
@@ -660,7 +692,7 @@ class _NewsContentState extends State<NewsContent> {
                             Text(
                               article.getFormattedDate(),
                               style: TextStyle(
-                                color: const Color(0xFF45556C),
+                                color: colors.textSecondary,
                                 fontSize: 14,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w400,
@@ -673,7 +705,7 @@ class _NewsContentState extends State<NewsContent> {
                               Text(
                                 article.getFormattedTime()!,
                                 style: TextStyle(
-                                  color: const Color(0xFF45556C),
+                                  color: colors.textSecondary,
                                   fontSize: 14,
                                   fontFamily: 'Inter',
                                   fontWeight: FontWeight.w400,
@@ -695,7 +727,7 @@ class _NewsContentState extends State<NewsContent> {
                 width: 80,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
+                  color: colors.surfaceElevated,
                   borderRadius: BorderRadius.only(
                     topRight: Radius.circular(8),
                     bottomRight: Radius.circular(8),
@@ -710,7 +742,7 @@ class _NewsContentState extends State<NewsContent> {
                 child: article.imageUrl == null
                     ? Icon(
                         TablerIcons.news,
-                        color: const Color(0xFF94A3B8),
+                        color: colors.textTertiary,
                         size: 32,
                       )
                     : null,
@@ -723,7 +755,7 @@ class _NewsContentState extends State<NewsContent> {
   }
 
   // Build "Még több hír" (Load more) button
-  Widget _buildLoadMoreButton() {
+  Widget _buildLoadMoreButton(AppColors colors) {
     return Container(
       height: 48,
       child: Material(
@@ -737,7 +769,7 @@ class _NewsContentState extends State<NewsContent> {
             decoration: BoxDecoration(
               border: Border.all(
                 width: 1,
-                color: const Color(0xFFE2E8F0),
+                color: colors.border,
               ),
               borderRadius: BorderRadius.circular(100),
             ),
@@ -746,14 +778,14 @@ class _NewsContentState extends State<NewsContent> {
               children: [
                 Icon(
                   TablerIcons.arrow_right,
-                  color: const Color(0xFF45556C),
+                  color: colors.textSecondary,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'Még több hír',
                   style: TextStyle(
-                    color: const Color(0xFF45556C),
+                    color: colors.textSecondary,
                     fontSize: 14,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w500,

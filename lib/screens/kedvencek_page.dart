@@ -5,7 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../data/market_stocks_data.dart';
 import '../state/favorites_state.dart';
 import '../state/watchlist_state.dart';
-import 'reszveny_info_page.dart';
+import 'product_detail_page.dart';
 import 'dart:math';
 
 // Widget a teljes kedvencek oldalhoz (ha külön navigáció kellene)
@@ -1570,7 +1570,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ReszvenyInfoPage(
+            builder: (context) => ProductDetailPage(
               stockName: stock.name,
               ticker: stock.ticker,
             ),
@@ -2032,7 +2032,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => ReszvenyInfoPage(
+              builder: (context) => ProductDetailPage(
                 stockName: stock.name,
                 ticker: stock.ticker,
               ),
@@ -2453,7 +2453,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ReszvenyInfoPage(
+            builder: (context) => ProductDetailPage(
               stockName: stock.name,
               ticker: stock.ticker,
             ),

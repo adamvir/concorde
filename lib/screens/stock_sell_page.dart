@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import '../services/transaction_service.dart';
 import '../data/mock_portfolio_data.dart';
+import '../state/theme_state.dart';
+import '../theme/app_colors.dart';
 
 class StockSellPage extends StatefulWidget {
   final String stockName;
@@ -28,6 +30,7 @@ class _StockSellPageState extends State<StockSellPage> {
   final TextEditingController _icebergQuantityController = TextEditingController();
   final TransactionService _transactionService = TransactionService();
   final MockPortfolioData _portfolioData = MockPortfolioData();
+  final ThemeState _themeState = ThemeState();
 
   OrderType _orderType = OrderType.limit;
   String _selectedAccount = 'TBSZ-2023';
@@ -42,14 +45,22 @@ class _StockSellPageState extends State<StockSellPage> {
   @override
   void initState() {
     super.initState();
+    _themeState.addListener(_onThemeChanged);
     _priceController.text = '150,00';
     _quantityController.text = '30';
     _stopPriceController.text = '106,00';
     _icebergQuantityController.text = '10';
   }
 
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   @override
   void dispose() {
+    _themeState.removeListener(_onThemeChanged);
     _quantityController.dispose();
     _priceController.dispose();
     _stopPriceController.dispose();
@@ -122,20 +133,22 @@ class _StockSellPageState extends State<StockSellPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(),
+            _buildHeader(colors),
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    _buildPriceSection(),
-                    _buildFormSection(),
-                    _buildSummarySection(),
-                    _buildAdvancedSettingsSection(),
+                    _buildPriceSection(colors),
+                    _buildFormSection(colors),
+                    _buildSummarySection(colors),
+                    _buildAdvancedSettingsSection(colors),
                     SizedBox(height: 100),
                   ],
                 ),
@@ -144,11 +157,11 @@ class _StockSellPageState extends State<StockSellPage> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomButton(),
+      bottomNavigationBar: _buildBottomButton(colors),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(AppColors colors) {
     return Container(
       width: double.infinity,
       height: 64,
@@ -156,14 +169,14 @@ class _StockSellPageState extends State<StockSellPage> {
       child: Row(
         children: [
           IconButton(
-            icon: Icon(TablerIcons.arrow_left, size: 24, color: Color(0xFF1D293D)),
+            icon: Icon(TablerIcons.arrow_left, size: 24, color: colors.textPrimary),
             onPressed: () => Navigator.pop(context),
           ),
           Expanded(
             child: Text(
               'Eladás - ${widget.stockName}',
               style: TextStyle(
-                color: Color(0xFF1D293D),
+                color: colors.textPrimary,
                 fontSize: 22,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w500,
@@ -176,12 +189,12 @@ class _StockSellPageState extends State<StockSellPage> {
     );
   }
 
-  Widget _buildPriceSection() {
+  Widget _buildPriceSection(AppColors colors) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: colors.surfaceElevated,
       ),
       child: Column(
         children: [
@@ -193,7 +206,7 @@ class _StockSellPageState extends State<StockSellPage> {
                   Text(
                     '${widget.currentPrice.toStringAsFixed(2)} ${widget.currency}',
                     style: TextStyle(
-                      color: Color(0xFF1D293D),
+                      color: colors.textPrimary,
                       fontSize: 16,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,
@@ -204,7 +217,7 @@ class _StockSellPageState extends State<StockSellPage> {
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Color(0xFFFF637E),
+                      color: colors.delayBadge,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -222,7 +235,7 @@ class _StockSellPageState extends State<StockSellPage> {
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Color(0xFFF59E0B),
+                      color: colors.preMarketBadge,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -241,7 +254,7 @@ class _StockSellPageState extends State<StockSellPage> {
               Text(
                 'V 450 db @ 146,90',
                 style: TextStyle(
-                  color: Color(0xFF45556C),
+                  color: colors.textSecondary,
                   fontSize: 16,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w400,
@@ -256,7 +269,7 @@ class _StockSellPageState extends State<StockSellPage> {
               Text(
                 '+4,43% (6,24)',
                 style: TextStyle(
-                  color: Color(0xFF007A55),
+                  color: colors.success,
                   fontSize: 16,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w400,
@@ -265,7 +278,7 @@ class _StockSellPageState extends State<StockSellPage> {
               Text(
                 'E 1.045 db @ 147,08',
                 style: TextStyle(
-                  color: Color(0xFF45556C),
+                  color: colors.textSecondary,
                   fontSize: 16,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w400,
@@ -278,12 +291,13 @@ class _StockSellPageState extends State<StockSellPage> {
     );
   }
 
-  Widget _buildFormSection() {
+  Widget _buildFormSection(AppColors colors) {
     return Container(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           _buildLabeledDropdown(
+            colors: colors,
             label: 'Számla',
             value: _selectedAccount,
             items: ['TBSZ-2023', 'TBSZ-2024', 'Értékpapírszámla'],
@@ -294,6 +308,7 @@ class _StockSellPageState extends State<StockSellPage> {
             children: [
               Expanded(
                 child: _buildLabeledDropdown(
+                  colors: colors,
                   label: 'Megbízás',
                   value: _selectedOrderDirection,
                   items: ['Vétel', 'Eladás'],
@@ -303,6 +318,7 @@ class _StockSellPageState extends State<StockSellPage> {
               SizedBox(width: 16),
               Expanded(
                 child: _buildLabeledDropdown(
+                  colors: colors,
                   label: 'Ár típus',
                   value: _orderType == OrderType.limit ? 'Limit' : 'Piaci',
                   items: ['Limit', 'Piaci'],
@@ -325,17 +341,19 @@ class _StockSellPageState extends State<StockSellPage> {
             children: [
               Expanded(
                 child: _buildLabeledTextField(
+                  colors: colors,
                   label: _orderType == OrderType.market ? 'Piaci ár' : 'Limit ár',
                   controller: _priceController,
                   suffix: widget.currency,
                   helperText: _orderType == OrderType.limit ? '+${_getPriceChangePercent().toStringAsFixed(1)}%' : '15 perccel késleltet...',
-                  helperColor: _getPriceChangePercent() > 0 ? null : Color(0xFF45556C),
+                  helperColor: _getPriceChangePercent() > 0 ? null : colors.textSecondary,
                   enabled: _orderType == OrderType.limit,
                 ),
               ),
               SizedBox(width: 16),
               Expanded(
                 child: _buildLabeledTextField(
+                  colors: colors,
                   label: 'Mennyiség',
                   controller: _quantityController,
                   suffix: 'db',
@@ -349,7 +367,7 @@ class _StockSellPageState extends State<StockSellPage> {
     );
   }
 
-  Widget _buildSummarySection() {
+  Widget _buildSummarySection(AppColors colors) {
     int availableQuantity = _getAvailableQuantity();
     double availableValue = _getAvailableValue();
     double totalValue = _calculateTotalValue();
@@ -359,26 +377,26 @@ class _StockSellPageState extends State<StockSellPage> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         border: Border(
-          top: BorderSide(color: Color(0xFFE2E8F0)),
+          top: BorderSide(color: colors.border),
         ),
       ),
       child: Column(
         children: [
-          _buildSummaryRow('Szabad készlet', '$availableQuantity db', hasIcon: false),
+          _buildSummaryRow(colors, 'Szabad készlet', '$availableQuantity db', hasIcon: false),
           SizedBox(height: 12),
-          _buildSummaryRow('Szabad készlet érték', '${availableValue.toStringAsFixed(0)} ${widget.currency}', hasIcon: true),
+          _buildSummaryRow(colors, 'Szabad készlet érték', '${availableValue.toStringAsFixed(0)} ${widget.currency}', hasIcon: true),
           SizedBox(height: 12),
-          _buildSummaryRow('Jutalék', '3,5 ${widget.currency}', hasIcon: true),
+          _buildSummaryRow(colors, 'Jutalék', '3,5 ${widget.currency}', hasIcon: true),
           SizedBox(height: 12),
-          _buildSummaryRow('Eladási érték', '${totalValue.toStringAsFixed(0)} ${widget.currency}'),
+          _buildSummaryRow(colors, 'Eladási érték', '${totalValue.toStringAsFixed(0)} ${widget.currency}'),
           SizedBox(height: 12),
-          _buildSummaryRow('Eladási mennyiség', '$quantity db'),
+          _buildSummaryRow(colors, 'Eladási mennyiség', '$quantity db'),
         ],
       ),
     );
   }
 
-  Widget _buildAdvancedSettingsSection() {
+  Widget _buildAdvancedSettingsSection(AppColors colors) {
     return Column(
       children: [
         InkWell(
@@ -391,7 +409,7 @@ class _StockSellPageState extends State<StockSellPage> {
                 Text(
                   'Haladó beállítások',
                   style: TextStyle(
-                    color: Color(0xFF1D293D),
+                    color: colors.textPrimary,
                     fontSize: 22,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w500,
@@ -399,7 +417,7 @@ class _StockSellPageState extends State<StockSellPage> {
                 ),
                 Icon(
                   _advancedSettingsExpanded ? TablerIcons.chevron_up : TablerIcons.chevron_down,
-                  color: Color(0xFF1D293D),
+                  color: colors.textPrimary,
                 ),
               ],
             ),
@@ -411,6 +429,7 @@ class _StockSellPageState extends State<StockSellPage> {
             child: Column(
               children: [
                 _buildLabeledDropdown(
+                  colors: colors,
                   label: 'Érvényesség',
                   value: _selectedValidity,
                   items: ['Visszavonásig', 'Nap végéig', 'Egy hétig'],
@@ -419,17 +438,18 @@ class _StockSellPageState extends State<StockSellPage> {
                 ),
                 SizedBox(height: 24),
                 _buildLabeledDropdown(
+                  colors: colors,
                   label: 'Kész letrehozási alv',
                   value: _selectedFIFO,
                   items: ['FIFO - First In, First Out', 'LIFO - Last In, First Out'],
                   onChanged: (value) => setState(() => _selectedFIFO = value!),
                 ),
                 SizedBox(height: 24),
-                _buildCheckbox('Premarket kereskedés', _premarketTrading, (value) {
+                _buildCheckbox(colors, 'Premarket kereskedés', _premarketTrading, (value) {
                   setState(() => _premarketTrading = value ?? false);
                 }),
                 SizedBox(height: 16),
-                _buildCheckbox('Stop ajánlat', _stopOrder, (value) {
+                _buildCheckbox(colors, 'Stop ajánlat', _stopOrder, (value) {
                   setState(() => _stopOrder = value ?? false);
                 }),
                 // Stop order input field
@@ -439,6 +459,7 @@ class _StockSellPageState extends State<StockSellPage> {
                     child: Column(
                       children: [
                         _buildLabeledTextField(
+                          colors: colors,
                           label: 'Aktiválási ár (${widget.currency})',
                           controller: _stopPriceController,
                           suffix: '',
@@ -446,13 +467,13 @@ class _StockSellPageState extends State<StockSellPage> {
                         SizedBox(height: 8),
                         Row(
                           children: [
-                            Icon(TablerIcons.alert_circle, size: 16, color: Color(0xFFEC003F)),
+                            Icon(TablerIcons.alert_circle, size: 16, color: colors.error),
                             SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 '-33,02% - Túl alacsony ár',
                                 style: TextStyle(
-                                  color: Color(0xFFEC003F),
+                                  color: colors.error,
                                   fontSize: 12,
                                   fontFamily: 'Inter',
                                   fontWeight: FontWeight.w400,
@@ -465,7 +486,7 @@ class _StockSellPageState extends State<StockSellPage> {
                     ),
                   ),
                 if (_stopOrder) SizedBox(height: 16),
-                _buildCheckbox('Iceberg ajánlat', _icebergOrder, (value) {
+                _buildCheckbox(colors, 'Iceberg ajánlat', _icebergOrder, (value) {
                   setState(() => _icebergOrder = value ?? false);
                 }),
                 // Iceberg order input field
@@ -473,6 +494,7 @@ class _StockSellPageState extends State<StockSellPage> {
                   Padding(
                     padding: const EdgeInsets.only(left: 48, top: 8),
                     child: _buildLabeledTextField(
+                      colors: colors,
                       label: 'Látható mennyiség (db)',
                       controller: _icebergQuantityController,
                       suffix: '',
@@ -485,18 +507,18 @@ class _StockSellPageState extends State<StockSellPage> {
     );
   }
 
-  Widget _buildBottomButton() {
+  Widget _buildBottomButton(AppColors colors) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+        color: colors.background,
+        border: Border(top: BorderSide(color: colors.border)),
       ),
       child: SafeArea(
         child: ElevatedButton(
           onPressed: _executeSell,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFFEC003F), // Red for sell
+            backgroundColor: colors.error, // Red for sell
             foregroundColor: Colors.white,
             padding: EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(
@@ -525,6 +547,7 @@ class _StockSellPageState extends State<StockSellPage> {
   }
 
   Widget _buildLabeledDropdown({
+    required AppColors colors,
     required String label,
     required String value,
     required List<String> items,
@@ -537,7 +560,7 @@ class _StockSellPageState extends State<StockSellPage> {
         Container(
           height: 56,
           decoration: BoxDecoration(
-            border: Border.all(color: Color(0xFFCAD5E2)),
+            border: Border.all(color: colors.inputBorder),
             borderRadius: BorderRadius.circular(4),
           ),
           child: Stack(
@@ -552,13 +575,14 @@ class _StockSellPageState extends State<StockSellPage> {
                         child: DropdownButton<String>(
                           value: value,
                           isExpanded: true,
-                          icon: Icon(TablerIcons.refresh, size: 16),
+                          icon: Icon(TablerIcons.refresh, size: 16, color: colors.textPrimary),
                           style: TextStyle(
-                            color: Color(0xFF1D293D),
+                            color: colors.textPrimary,
                             fontSize: 16,
                             fontFamily: 'Inter',
                             fontWeight: FontWeight.w400,
                           ),
+                          dropdownColor: colors.surface,
                           items: items.map((item) {
                             return DropdownMenuItem(value: item, child: Text(item));
                           }).toList(),
@@ -574,11 +598,11 @@ class _StockSellPageState extends State<StockSellPage> {
                 top: -8,
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 4),
-                  color: Colors.white,
+                  color: colors.background,
                   child: Text(
                     label,
                     style: TextStyle(
-                      color: Color(0xFF45556C),
+                      color: colors.textSecondary,
                       fontSize: 12,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w400,
@@ -595,7 +619,7 @@ class _StockSellPageState extends State<StockSellPage> {
             child: Text(
               helperText,
               style: TextStyle(
-                color: Color(0xFF45556C),
+                color: colors.textSecondary,
                 fontSize: 12,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w400,
@@ -607,6 +631,7 @@ class _StockSellPageState extends State<StockSellPage> {
   }
 
   Widget _buildLabeledTextField({
+    required AppColors colors,
     required String label,
     required TextEditingController controller,
     required String suffix,
@@ -620,9 +645,9 @@ class _StockSellPageState extends State<StockSellPage> {
         Container(
           height: 56,
           decoration: BoxDecoration(
-            border: Border.all(color: Color(0xFFCAD5E2)),
+            border: Border.all(color: colors.inputBorder),
             borderRadius: BorderRadius.circular(4),
-            color: enabled ? Colors.white : Color(0xFFF8FAFC),
+            color: enabled ? colors.inputBackground : colors.surfaceElevated,
           ),
           child: Stack(
             clipBehavior: Clip.none,
@@ -634,7 +659,7 @@ class _StockSellPageState extends State<StockSellPage> {
                   enabled: enabled,
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
                   style: TextStyle(
-                    color: enabled ? Color(0xFF1D293D) : Color(0xFF94A3B8),
+                    color: enabled ? colors.textPrimary : colors.textTertiary,
                     fontSize: 16,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w400,
@@ -645,7 +670,7 @@ class _StockSellPageState extends State<StockSellPage> {
                     contentPadding: EdgeInsets.zero,
                     suffixText: suffix.isNotEmpty ? suffix : null,
                     suffixStyle: TextStyle(
-                      color: enabled ? Color(0xFF1D293D) : Color(0xFF94A3B8),
+                      color: enabled ? colors.textPrimary : colors.textTertiary,
                       fontSize: 16,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w400,
@@ -659,11 +684,11 @@ class _StockSellPageState extends State<StockSellPage> {
                 top: -8,
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 4),
-                  color: Colors.white,
+                  color: colors.background,
                   child: Text(
                     label,
                     style: TextStyle(
-                      color: Color(0xFF45556C),
+                      color: colors.textSecondary,
                       fontSize: 12,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w400,
@@ -680,7 +705,7 @@ class _StockSellPageState extends State<StockSellPage> {
             child: Text(
               helperText,
               style: TextStyle(
-                color: helperColor ?? Color(0xFF45556C),
+                color: helperColor ?? colors.textSecondary,
                 fontSize: 12,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w400,
@@ -691,7 +716,7 @@ class _StockSellPageState extends State<StockSellPage> {
     );
   }
 
-  Widget _buildSummaryRow(String label, String value, {bool hasIcon = false}) {
+  Widget _buildSummaryRow(AppColors colors, String label, String value, {bool hasIcon = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -700,24 +725,24 @@ class _StockSellPageState extends State<StockSellPage> {
             Text(
               label,
               style: TextStyle(
-                color: Color(0xFF45556C),
+                color: colors.textSecondary,
                 fontSize: 16,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w400,
               ),
             ),
             if (hasIcon) SizedBox(width: 8),
-            if (hasIcon) Icon(TablerIcons.info_circle, size: 16, color: Color(0xFF45556C)),
+            if (hasIcon) Icon(TablerIcons.info_circle, size: 16, color: colors.textSecondary),
           ],
         ),
         Row(
           children: [
-            if (hasIcon) Icon(TablerIcons.arrow_down, size: 16, color: Color(0xFF1D293D)),
+            if (hasIcon) Icon(TablerIcons.arrow_down, size: 16, color: colors.textPrimary),
             if (hasIcon) SizedBox(width: 4),
             Text(
               value,
               style: TextStyle(
-                color: Color(0xFF1D293D),
+                color: colors.textPrimary,
                 fontSize: 16,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w400,
@@ -729,21 +754,22 @@ class _StockSellPageState extends State<StockSellPage> {
     );
   }
 
-  Widget _buildCheckbox(String label, bool value, Function(bool?) onChanged) {
+  Widget _buildCheckbox(AppColors colors, String label, bool value, Function(bool?) onChanged) {
     return Row(
       children: [
         Checkbox(
           value: value,
           onChanged: onChanged,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
-          side: BorderSide(width: 2, color: Color(0xFF45556C)),
+          side: BorderSide(width: 2, color: colors.textSecondary),
+          activeColor: colors.primary,
         ),
         SizedBox(width: 8),
         Expanded(
           child: Text(
             label,
             style: TextStyle(
-              color: Color(0xFF1D293D),
+              color: colors.textPrimary,
               fontSize: 16,
               fontFamily: 'Inter',
               fontWeight: FontWeight.w400,

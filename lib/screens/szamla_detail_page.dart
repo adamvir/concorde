@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import '../state/currency_state.dart';
+import '../state/theme_state.dart';
+import '../theme/app_colors.dart';
 import '../data/mock_portfolio_data.dart';
 
 class SzamlaDetailPage extends StatefulWidget {
@@ -18,20 +20,29 @@ class SzamlaDetailPage extends StatefulWidget {
 class _SzamlaDetailPageState extends State<SzamlaDetailPage> {
   final CurrencyState _currencyState = CurrencyState();
   final MockPortfolioData _portfolioData = MockPortfolioData();
+  final ThemeState _themeState = ThemeState();
 
   @override
   void initState() {
     super.initState();
     _currencyState.addListener(_onCurrencyChanged);
+    _themeState.addListener(_onThemeChanged);
   }
 
   @override
   void dispose() {
     _currencyState.removeListener(_onCurrencyChanged);
+    _themeState.removeListener(_onThemeChanged);
     super.dispose();
   }
 
   void _onCurrencyChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  void _onThemeChanged() {
     if (mounted) {
       setState(() {});
     }
@@ -74,15 +85,16 @@ class _SzamlaDetailPageState extends State<SzamlaDetailPage> {
   @override
   Widget build(BuildContext context) {
     AccountPortfolio account = _getAccount();
+    final colors = AppColors(isDark: _themeState.isDark);
     double totalValue = account.totalValueIn(_currencyState.selectedCurrency);
     double unrealizedProfit = account.unrealizedProfitIn(_currencyState.selectedCurrency);
     double totalCost = totalValue - unrealizedProfit;
     double profitPercent = totalCost > 0 ? (unrealizedProfit / totalCost) * 100 : 0;
     bool isPositive = unrealizedProfit >= 0;
-    Color profitColor = isPositive ? const Color(0xFF007A55) : const Color(0xFFEC003F);
+    Color profitColor = isPositive ? colors.success : colors.error;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -95,7 +107,7 @@ class _SzamlaDetailPageState extends State<SzamlaDetailPage> {
                 children: [
                   // Back button
                   IconButton(
-                    icon: Icon(TablerIcons.arrow_left, size: 24),
+                    icon: Icon(TablerIcons.arrow_left, size: 24, color: colors.textPrimary),
                     onPressed: () => Navigator.pop(context),
                   ),
                   SizedBox(width: 8),
@@ -104,7 +116,7 @@ class _SzamlaDetailPageState extends State<SzamlaDetailPage> {
                     child: Text(
                       widget.accountName,
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 22,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -125,7 +137,7 @@ class _SzamlaDetailPageState extends State<SzamlaDetailPage> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
+                        color: colors.surfaceElevated,
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -139,7 +151,7 @@ class _SzamlaDetailPageState extends State<SzamlaDetailPage> {
                                 Text(
                                   '${_formatCurrency(totalValue)} ${_currencyState.selectedCurrency}',
                                   style: TextStyle(
-                                    color: const Color(0xFF1D293D),
+                                    color: colors.textPrimary,
                                     fontSize: 28,
                                     fontFamily: 'Inter',
                                     fontWeight: FontWeight.w500,
@@ -150,7 +162,7 @@ class _SzamlaDetailPageState extends State<SzamlaDetailPage> {
                                 Text(
                                   'Nem realizált eredmény',
                                   style: TextStyle(
-                                    color: const Color(0xFF45556C),
+                                    color: colors.textSecondary,
                                     fontSize: 12,
                                     fontFamily: 'Inter',
                                     fontWeight: FontWeight.w400,
@@ -189,7 +201,7 @@ class _SzamlaDetailPageState extends State<SzamlaDetailPage> {
                                 shape: RoundedRectangleBorder(
                                   side: BorderSide(
                                     width: 1,
-                                    color: const Color(0xFFCAD5E2),
+                                    color: colors.border,
                                   ),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
@@ -201,7 +213,7 @@ class _SzamlaDetailPageState extends State<SzamlaDetailPage> {
                                     child: Text(
                                       _currencyState.selectedCurrency,
                                       style: TextStyle(
-                                        color: const Color(0xFF1D293D),
+                                        color: colors.textPrimary,
                                         fontSize: 16,
                                         fontFamily: 'Inter',
                                         fontWeight: FontWeight.w400,
@@ -214,11 +226,11 @@ class _SzamlaDetailPageState extends State<SzamlaDetailPage> {
                                     top: -8,
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 4),
-                                      decoration: BoxDecoration(color: const Color(0xFFF8FAFC)),
+                                      decoration: BoxDecoration(color: colors.surfaceElevated),
                                       child: Text(
                                         'Összesítés',
                                         style: TextStyle(
-                                          color: const Color(0xFF45556C),
+                                          color: colors.textSecondary,
                                           fontSize: 12,
                                           fontFamily: 'Inter',
                                           fontWeight: FontWeight.w400,
@@ -233,7 +245,7 @@ class _SzamlaDetailPageState extends State<SzamlaDetailPage> {
                                     child: Icon(
                                       TablerIcons.chevron_down,
                                       size: 20,
-                                      color: const Color(0xFF45556C),
+                                      color: colors.textSecondary,
                                     ),
                                   ),
                                 ],
@@ -249,10 +261,10 @@ class _SzamlaDetailPageState extends State<SzamlaDetailPage> {
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
+                        color: colors.surfaceElevated,
                         border: Border(
-                          top: BorderSide(width: 1, color: const Color(0xFFE2E8F0)),
-                          bottom: BorderSide(width: 1, color: const Color(0xFFE2E8F0)),
+                          top: BorderSide(width: 1, color: colors.border),
+                          bottom: BorderSide(width: 1, color: colors.border),
                         ),
                       ),
                       child: Column(
@@ -264,7 +276,7 @@ class _SzamlaDetailPageState extends State<SzamlaDetailPage> {
                               Text(
                                 'Termék',
                                 style: TextStyle(
-                                  color: const Color(0xFF45556C),
+                                  color: colors.textSecondary,
                                   fontSize: 12,
                                   fontFamily: 'Inter',
                                   fontWeight: FontWeight.w500,
@@ -275,7 +287,7 @@ class _SzamlaDetailPageState extends State<SzamlaDetailPage> {
                                 'Teljes érték',
                                 textAlign: TextAlign.right,
                                 style: TextStyle(
-                                  color: const Color(0xFF45556C),
+                                  color: colors.textSecondary,
                                   fontSize: 12,
                                   fontFamily: 'Inter',
                                   fontWeight: FontWeight.w500,
@@ -294,7 +306,7 @@ class _SzamlaDetailPageState extends State<SzamlaDetailPage> {
                                 child: Text(
                                   'Össz. darab @ átl. ár',
                                   style: TextStyle(
-                                    color: const Color(0xFF45556C),
+                                    color: colors.textSecondary,
                                     fontSize: 12,
                                     fontFamily: 'Inter',
                                     fontWeight: FontWeight.w500,
@@ -310,7 +322,7 @@ class _SzamlaDetailPageState extends State<SzamlaDetailPage> {
                                       'Eredm. %',
                                       textAlign: TextAlign.right,
                                       style: TextStyle(
-                                        color: const Color(0xFF45556C),
+                                        color: colors.textSecondary,
                                         fontSize: 12,
                                         fontFamily: 'Inter',
                                         fontWeight: FontWeight.w500,
@@ -325,7 +337,7 @@ class _SzamlaDetailPageState extends State<SzamlaDetailPage> {
                                       'Eredmény',
                                       textAlign: TextAlign.right,
                                       style: TextStyle(
-                                        color: const Color(0xFF45556C),
+                                        color: colors.textSecondary,
                                         fontSize: 12,
                                         fontFamily: 'Inter',
                                         fontWeight: FontWeight.w500,
@@ -364,8 +376,8 @@ class _SzamlaDetailPageState extends State<SzamlaDetailPage> {
                               : 0;
                           bool stockIsPositive = stockProfit >= 0;
                           Color stockColor = stockIsPositive
-                              ? const Color(0xFF007A55)
-                              : const Color(0xFFEC003F);
+                              ? colors.success
+                              : colors.error;
 
                           return Container(
                             width: double.infinity,
@@ -374,7 +386,7 @@ class _SzamlaDetailPageState extends State<SzamlaDetailPage> {
                               border: Border(
                                 bottom: BorderSide(
                                   width: 1,
-                                  color: const Color(0xFFE2E8F0),
+                                  color: colors.border,
                                 ),
                               ),
                             ),
@@ -388,7 +400,7 @@ class _SzamlaDetailPageState extends State<SzamlaDetailPage> {
                                     Text(
                                       stock.name,
                                       style: TextStyle(
-                                        color: const Color(0xFF1D293D),
+                                        color: colors.textPrimary,
                                         fontSize: 16,
                                         fontFamily: 'Inter',
                                         fontWeight: FontWeight.w500,
@@ -398,7 +410,7 @@ class _SzamlaDetailPageState extends State<SzamlaDetailPage> {
                                       '${_formatCurrency(stockValueConverted)} ${_currencyState.selectedCurrency}',
                                       textAlign: TextAlign.right,
                                       style: TextStyle(
-                                        color: const Color(0xFF1D293D),
+                                        color: colors.textPrimary,
                                         fontSize: 16,
                                         fontFamily: 'Inter',
                                         fontWeight: FontWeight.w400,
@@ -416,7 +428,7 @@ class _SzamlaDetailPageState extends State<SzamlaDetailPage> {
                                       child: Text(
                                         '${stock.quantity}db @ ${_formatCurrency(stock.avgPrice)} ${stock.currency}',
                                         style: TextStyle(
-                                          color: const Color(0xFF45556C),
+                                          color: colors.textSecondary,
                                           fontSize: 14,
                                           fontFamily: 'Inter',
                                           fontWeight: FontWeight.w400,

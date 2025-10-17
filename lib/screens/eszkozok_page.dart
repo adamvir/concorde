@@ -7,6 +7,8 @@ import 'reszveny_info_page.dart';
 import '../widgets/account_selector_bottom_sheet.dart';
 import '../state/account_state.dart';
 import '../state/currency_state.dart';
+import '../state/theme_state.dart' as app_theme;
+import '../theme/app_colors.dart';
 import '../data/mock_portfolio_data.dart';
 import '../services/transaction_service.dart';
 
@@ -15,20 +17,26 @@ class EszkozokPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeState = app_theme.ThemeState();
+    final colors = AppColors(isDark: themeState.isDark);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: EszkozokContent(),
       bottomNavigationBar: _buildBottomNavBar(context),
     );
   }
 
   Widget _buildBottomNavBar(BuildContext context) {
+    final themeState = app_theme.ThemeState();
+    final colors = AppColors(isDark: themeState.isDark);
+
     return Container(
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
             width: 1,
-            color: const Color(0xFFE2E8F0),
+            color: colors.border,
           ),
         ),
       ),
@@ -36,7 +44,7 @@ class EszkozokPage extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            color: Colors.white,
+            color: colors.tabBarBackground,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -51,13 +59,13 @@ class EszkozokPage extends StatelessWidget {
           Container(
             width: double.infinity,
             height: 24,
-            color: Colors.white,
+            color: colors.tabBarBackground,
             child: Center(
               child: Container(
                 width: 108,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1D293D),
+                  color: colors.textPrimary,
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
@@ -69,6 +77,8 @@ class EszkozokPage extends StatelessWidget {
   }
 
   Widget _buildBottomNavItem(BuildContext context, int index, IconData icon, String label) {
+    final themeState = app_theme.ThemeState();
+    final colors = AppColors(isDark: themeState.isDark);
     bool isSelected = index == 0; // Portfolio is always selected since we're viewing assets from there
 
     return Expanded(
@@ -92,13 +102,13 @@ class EszkozokPage extends StatelessWidget {
                 width: 56,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFFFEF3C6) : Colors.transparent,
+                  color: isSelected ? colors.tabBarSelected : Colors.transparent,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
                   icon,
                   size: 24,
-                  color: isSelected ? const Color(0xFFFD9A00) : const Color(0xFF45556C),
+                  color: isSelected ? colors.tabBarIconSelected : colors.tabBarIconUnselected,
                 ),
               ),
               SizedBox(height: 4),
@@ -106,7 +116,7 @@ class EszkozokPage extends StatelessWidget {
                 label,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: isSelected ? const Color(0xFF1D293D) : const Color(0xFF45556C),
+                  color: isSelected ? colors.tabBarLabelSelected : colors.tabBarLabelUnselected,
                   fontSize: 12,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w500,
@@ -133,6 +143,7 @@ class _EszkozokContentState extends State<EszkozokContent> {
   String _selectedGrouping = 'Eszközosztály';
   final AccountState _accountState = AccountState();
   final CurrencyState _currencyState = CurrencyState();
+  final app_theme.ThemeState _themeState = app_theme.ThemeState();
   final MockPortfolioData _portfolioData = MockPortfolioData();
   final TransactionService _transactionService = TransactionService();
 
@@ -141,6 +152,7 @@ class _EszkozokContentState extends State<EszkozokContent> {
     super.initState();
     _accountState.addListener(_onAccountChanged);
     _currencyState.addListener(_onCurrencyChanged);
+    _themeState.addListener(_onThemeChanged);
     _transactionService.addListener(_onTransactionChanged);
   }
 
@@ -148,6 +160,7 @@ class _EszkozokContentState extends State<EszkozokContent> {
   void dispose() {
     _accountState.removeListener(_onAccountChanged);
     _currencyState.removeListener(_onCurrencyChanged);
+    _themeState.removeListener(_onThemeChanged);
     _transactionService.removeListener(_onTransactionChanged);
     super.dispose();
   }
@@ -166,6 +179,12 @@ class _EszkozokContentState extends State<EszkozokContent> {
 
   void _onCurrencyChanged() {
     print('Eszkozok: Currency changed to ${_currencyState.selectedCurrency}');
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  void _onThemeChanged() {
     if (mounted) {
       setState(() {});
     }
@@ -278,6 +297,8 @@ class _EszkozokContentState extends State<EszkozokContent> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return SafeArea(
       child: Column(
         children: [
@@ -289,7 +310,7 @@ class _EszkozokContentState extends State<EszkozokContent> {
               children: [
                 // Back button
                 IconButton(
-                  icon: Icon(TablerIcons.arrow_left, size: 24),
+                  icon: Icon(TablerIcons.arrow_left, size: 24, color: colors.textPrimary),
                   onPressed: () {
                     if (widget.onBack != null) {
                       widget.onBack!();
@@ -307,7 +328,7 @@ class _EszkozokContentState extends State<EszkozokContent> {
                       Text(
                         'Eszközök',
                         style: TextStyle(
-                          color: const Color(0xFF1D293D),
+                          color: colors.textPrimary,
                           fontSize: 22,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -316,7 +337,7 @@ class _EszkozokContentState extends State<EszkozokContent> {
                       Text(
                         _accountState.selectedAccount,
                         style: TextStyle(
-                          color: const Color(0xFF45556C),
+                          color: colors.textSecondary,
                           fontSize: 14,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -327,7 +348,7 @@ class _EszkozokContentState extends State<EszkozokContent> {
                 ),
                 // Circle chevron down button
                 IconButton(
-                  icon: Icon(TablerIcons.circle_chevron_down, size: 24),
+                  icon: Icon(TablerIcons.circle_chevron_down, size: 24, color: colors.textPrimary),
                   onPressed: _showAccountSelectorBottomSheet,
                 ),
               ],
@@ -351,7 +372,7 @@ class _EszkozokContentState extends State<EszkozokContent> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
+                    color: colors.surfaceElevated,
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -364,7 +385,7 @@ class _EszkozokContentState extends State<EszkozokContent> {
                             final unrealizedProfit = portfolio.unrealizedProfitIn(_currencyState.selectedCurrency);
                             final profitPercent = portfolio.totalProfitPercent;
                             final isPositive = unrealizedProfit >= 0;
-                            final profitColor = isPositive ? const Color(0xFF007A55) : const Color(0xFFEC003F);
+                            final profitColor = isPositive ? colors.success : colors.error;
 
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -372,7 +393,7 @@ class _EszkozokContentState extends State<EszkozokContent> {
                                 Text(
                                   '${_formatCurrency(totalValue)} ${_currencyState.selectedCurrency}',
                                   style: TextStyle(
-                                    color: const Color(0xFF1D293D),
+                                    color: colors.textPrimary,
                                     fontSize: 28,
                                     fontFamily: 'Inter',
                                     fontWeight: FontWeight.w500,
@@ -382,7 +403,7 @@ class _EszkozokContentState extends State<EszkozokContent> {
                                 Text(
                                   'Nem realizált eredmény',
                                   style: TextStyle(
-                                    color: const Color(0xFF45556C),
+                                    color: colors.textSecondary,
                                     fontSize: 12,
                                     fontFamily: 'Inter',
                                     fontWeight: FontWeight.w400,
@@ -423,7 +444,7 @@ class _EszkozokContentState extends State<EszkozokContent> {
                               decoration: BoxDecoration(
                                 border: Border.all(
                                   width: 1,
-                                  color: const Color(0xFFCAD5E2),
+                                  color: colors.inputBorder,
                                 ),
                                 borderRadius: BorderRadius.circular(4),
                               ),
@@ -434,14 +455,14 @@ class _EszkozokContentState extends State<EszkozokContent> {
                                     child: Text(
                                       _currencyState.selectedCurrency,
                                       style: TextStyle(
-                                        color: const Color(0xFF1D293D),
+                                        color: colors.textPrimary,
                                         fontSize: 16,
                                         fontFamily: 'Inter',
                                         fontWeight: FontWeight.w400,
                                       ),
                                     ),
                                   ),
-                                  Icon(TablerIcons.chevron_down, size: 16),
+                                  Icon(TablerIcons.chevron_down, size: 16, color: colors.textPrimary),
                                 ],
                               ),
                             ),
@@ -451,11 +472,11 @@ class _EszkozokContentState extends State<EszkozokContent> {
                             top: -8,
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 4),
-                              color: const Color(0xFFF8FAFC),
+                              color: colors.surfaceElevated,
                               child: Text(
                                 'Összesítés',
                                 style: TextStyle(
-                                  color: const Color(0xFF45556C),
+                                  color: colors.textSecondary,
                                   fontSize: 12,
                                   fontFamily: 'Inter',
                                   fontWeight: FontWeight.w400,
@@ -483,7 +504,7 @@ class _EszkozokContentState extends State<EszkozokContent> {
                           decoration: BoxDecoration(
                             border: Border.all(
                               width: 1,
-                              color: const Color(0xFFCAD5E2),
+                              color: colors.inputBorder,
                             ),
                             borderRadius: BorderRadius.circular(4),
                           ),
@@ -494,14 +515,14 @@ class _EszkozokContentState extends State<EszkozokContent> {
                                 child: Text(
                                   _selectedGrouping,
                                   style: TextStyle(
-                                    color: const Color(0xFF1D293D),
+                                    color: colors.textPrimary,
                                     fontSize: 16,
                                     fontFamily: 'Inter',
                                     fontWeight: FontWeight.w400,
                                   ),
                                 ),
                               ),
-                              Icon(TablerIcons.chevron_down, size: 16),
+                              Icon(TablerIcons.chevron_down, size: 16, color: colors.textPrimary),
                             ],
                           ),
                         ),
@@ -511,11 +532,11 @@ class _EszkozokContentState extends State<EszkozokContent> {
                         top: -8,
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
-                          color: Colors.white,
+                          color: colors.background,
                           child: Text(
                             'Csoportosítás',
                             style: TextStyle(
-                              color: const Color(0xFF45556C),
+                              color: colors.textSecondary,
                               fontSize: 12,
                               fontFamily: 'Inter',
                               fontWeight: FontWeight.w400,
@@ -728,11 +749,11 @@ class _EszkozokContentState extends State<EszkozokContent> {
       const Color(0xFFE17100),
       const Color(0xFFFFBA00),
       const Color(0xFF00A3FF),
-      const Color(0xFF7C3AED),
+      const Color(0xFF1D293D),
       const Color(0xFFEC4899),
       const Color(0xFF10B981),
       const Color(0xFFF59E0B),
-      const Color(0xFF8B5CF6),
+      const Color(0xFF45556C),
     ];
 
     return Container(
@@ -769,18 +790,23 @@ class _EszkozokContentState extends State<EszkozokContent> {
           SizedBox(height: 14),
           // Product list
           if (products.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Center(
-                child: Text(
-                  'Nincs termék',
-                  style: TextStyle(
-                    color: const Color(0xFF94A3B8),
-                    fontSize: 14,
-                    fontFamily: 'Inter',
+            Builder(
+              builder: (context) {
+                final colors = AppColors(isDark: _themeState.isDark);
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Center(
+                    child: Text(
+                      'Nincs termék',
+                      style: TextStyle(
+                        color: colors.textTertiary,
+                        fontSize: 14,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             )
           else
             Column(
@@ -938,9 +964,11 @@ class _EszkozokContentState extends State<EszkozokContent> {
     bool isLast = false,
     VoidCallback? onTap,
   }) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     Color getChangeColor() {
-      if (isPositive == null) return const Color(0xFF45556C);
-      return isPositive ? const Color(0xFF007A55) : const Color(0xFFEC003F);
+      if (isPositive == null) return colors.textSecondary;
+      return isPositive ? colors.success : colors.error;
     }
 
     Widget content = Container(
@@ -950,7 +978,7 @@ class _EszkozokContentState extends State<EszkozokContent> {
         border: Border(
           bottom: BorderSide(
             width: isLast ? 0 : 1,
-            color: const Color(0xFFE2E8F0),
+            color: colors.divider,
           ),
         ),
       ),
@@ -977,7 +1005,7 @@ class _EszkozokContentState extends State<EszkozokContent> {
                     Text(
                       title,
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 16,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -987,7 +1015,7 @@ class _EszkozokContentState extends State<EszkozokContent> {
                       amount,
                       textAlign: TextAlign.right,
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 16,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w400,
@@ -1001,7 +1029,7 @@ class _EszkozokContentState extends State<EszkozokContent> {
                     Text(
                       percentage,
                       style: TextStyle(
-                        color: const Color(0xFF45556C),
+                        color: colors.textSecondary,
                         fontSize: 14,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w400,
@@ -1084,9 +1112,12 @@ class _CurrencySelectorBottomSheetState extends State<CurrencySelectorBottomShee
 
   @override
   Widget build(BuildContext context) {
+    final themeState = app_theme.ThemeState();
+    final colors = AppColors(isDark: themeState.isDark);
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
@@ -1112,7 +1143,7 @@ class _CurrencySelectorBottomSheetState extends State<CurrencySelectorBottomShee
                     child: Text(
                       'Összesítés devizaneme',
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 22,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -1125,7 +1156,7 @@ class _CurrencySelectorBottomSheetState extends State<CurrencySelectorBottomShee
                   width: 48,
                   height: 48,
                   child: IconButton(
-                    icon: Icon(TablerIcons.x, size: 24),
+                    icon: Icon(TablerIcons.x, size: 24, color: colors.textPrimary),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ),
@@ -1151,6 +1182,8 @@ class _CurrencySelectorBottomSheetState extends State<CurrencySelectorBottomShee
   }
 
   Widget _buildCurrencyOption(BuildContext context, String currency) {
+    final themeState = app_theme.ThemeState();
+    final colors = AppColors(isDark: themeState.isDark);
     final bool isSelected = currency == _currentSelection;
 
     return InkWell(
@@ -1164,14 +1197,14 @@ class _CurrencySelectorBottomSheetState extends State<CurrencySelectorBottomShee
         width: double.infinity,
         height: 56,
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFFEF3C6) : Colors.transparent,
+          color: isSelected ? (themeState.isDark ? colors.accentDark : colors.accent) : Colors.transparent,
           borderRadius: BorderRadius.circular(100),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Text(
           currency,
           style: TextStyle(
-            color: isSelected ? const Color(0xFF1D293D) : const Color(0xFF45556C),
+            color: isSelected ? colors.textPrimary : colors.textSecondary,
             fontSize: 14,
             fontFamily: 'Inter',
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
@@ -1210,9 +1243,12 @@ class _GroupingSelectorBottomSheetState extends State<GroupingSelectorBottomShee
 
   @override
   Widget build(BuildContext context) {
+    final themeState = app_theme.ThemeState();
+    final colors = AppColors(isDark: themeState.isDark);
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
@@ -1238,7 +1274,7 @@ class _GroupingSelectorBottomSheetState extends State<GroupingSelectorBottomShee
                     child: Text(
                       'Csoportosítás',
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 22,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -1251,7 +1287,7 @@ class _GroupingSelectorBottomSheetState extends State<GroupingSelectorBottomShee
                   width: 48,
                   height: 48,
                   child: IconButton(
-                    icon: Icon(TablerIcons.x, size: 24),
+                    icon: Icon(TablerIcons.x, size: 24, color: colors.textPrimary),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ),
@@ -1279,6 +1315,8 @@ class _GroupingSelectorBottomSheetState extends State<GroupingSelectorBottomShee
   }
 
   Widget _buildGroupingOption(BuildContext context, String grouping) {
+    final themeState = app_theme.ThemeState();
+    final colors = AppColors(isDark: themeState.isDark);
     final bool isSelected = grouping == _currentSelection;
 
     return InkWell(
@@ -1292,14 +1330,14 @@ class _GroupingSelectorBottomSheetState extends State<GroupingSelectorBottomShee
         width: double.infinity,
         height: 56,
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFFEF3C6) : Colors.transparent,
+          color: isSelected ? (themeState.isDark ? colors.accentDark : colors.accent) : Colors.transparent,
           borderRadius: BorderRadius.circular(100),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Text(
           grouping,
           style: TextStyle(
-            color: isSelected ? const Color(0xFF1D293D) : const Color(0xFF45556C),
+            color: isSelected ? colors.textPrimary : colors.textSecondary,
             fontSize: 14,
             fontFamily: 'Inter',
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,

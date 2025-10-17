@@ -5,27 +5,54 @@ import 'main_navigation.dart';
 import '../widgets/account_selector_bottom_sheet.dart';
 import '../state/account_state.dart';
 import '../state/currency_state.dart';
+import '../state/theme_state.dart';
+import '../theme/app_colors.dart';
 import '../data/mock_portfolio_data.dart';
 
-class ReszvenyekPage extends StatelessWidget {
+class ReszvenyekPage extends StatefulWidget {
   const ReszvenyekPage({Key? key}) : super(key: key);
 
   @override
+  State<ReszvenyekPage> createState() => _ReszvenyekPageState();
+}
+
+class _ReszvenyekPageState extends State<ReszvenyekPage> {
+  final ThemeState _themeState = ThemeState();
+
+  @override
+  void initState() {
+    super.initState();
+    _themeState.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    _themeState.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: ReszvenyekContent(),
-      bottomNavigationBar: _buildBottomNavBar(context),
+      bottomNavigationBar: _buildBottomNavBar(context, colors),
     );
   }
 
-  Widget _buildBottomNavBar(BuildContext context) {
+  Widget _buildBottomNavBar(BuildContext context, AppColors colors) {
     return Container(
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
             width: 1,
-            color: const Color(0xFFE2E8F0),
+            color: colors.border,
           ),
         ),
       ),
@@ -33,28 +60,28 @@ class ReszvenyekPage extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            color: Colors.white,
+            color: colors.background,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildBottomNavItem(context, 0, TablerIcons.chart_pie, 'Portfólió'),
-                _buildBottomNavItem(context, 1, TablerIcons.heart, 'Kedvencek'),
-                _buildBottomNavItem(context, 2, TablerIcons.news, 'Hírek'),
-                _buildBottomNavItem(context, 3, TablerIcons.trending_up, 'Tőzsde'),
-                _buildBottomNavItem(context, 4, TablerIcons.dots, 'Több'),
+                _buildBottomNavItem(context, 0, TablerIcons.chart_pie, 'Portfólió', colors),
+                _buildBottomNavItem(context, 1, TablerIcons.heart, 'Kedvencek', colors),
+                _buildBottomNavItem(context, 2, TablerIcons.news, 'Hírek', colors),
+                _buildBottomNavItem(context, 3, TablerIcons.trending_up, 'Tőzsde', colors),
+                _buildBottomNavItem(context, 4, TablerIcons.dots, 'Több', colors),
               ],
             ),
           ),
           Container(
             width: double.infinity,
             height: 24,
-            color: Colors.white,
+            color: colors.background,
             child: Center(
               child: Container(
                 width: 108,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1D293D),
+                  color: colors.textPrimary,
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
@@ -65,7 +92,7 @@ class ReszvenyekPage extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomNavItem(BuildContext context, int index, IconData icon, String label) {
+  Widget _buildBottomNavItem(BuildContext context, int index, IconData icon, String label, AppColors colors) {
     bool isSelected = index == 0; // Portfolio is always selected since we're viewing stocks from there
 
     return Expanded(
@@ -89,13 +116,13 @@ class ReszvenyekPage extends StatelessWidget {
                 width: 56,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFFFEF3C6) : Colors.transparent,
+                  color: isSelected ? colors.accent : Colors.transparent,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
                   icon,
                   size: 24,
-                  color: isSelected ? const Color(0xFFFD9A00) : const Color(0xFF45556C),
+                  color: isSelected ? colors.tabBarIconSelected : colors.tabBarIconUnselected,
                 ),
               ),
               SizedBox(height: 4),
@@ -103,7 +130,7 @@ class ReszvenyekPage extends StatelessWidget {
                 label,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: isSelected ? const Color(0xFF1D293D) : const Color(0xFF45556C),
+                  color: isSelected ? colors.tabBarLabelSelected : colors.tabBarLabelUnselected,
                   fontSize: 12,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w500,
@@ -130,18 +157,21 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
   final CurrencyState _currencyState = CurrencyState();
   final AccountState _accountState = AccountState();
   final MockPortfolioData _portfolioData = MockPortfolioData();
+  final ThemeState _themeState = ThemeState();
 
   @override
   void initState() {
     super.initState();
     _accountState.addListener(_onAccountChanged);
     _currencyState.addListener(_onCurrencyChanged);
+    _themeState.addListener(_onThemeChanged);
   }
 
   @override
   void dispose() {
     _accountState.removeListener(_onAccountChanged);
     _currencyState.removeListener(_onCurrencyChanged);
+    _themeState.removeListener(_onThemeChanged);
     super.dispose();
   }
 
@@ -153,6 +183,12 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
 
   void _onCurrencyChanged() {
     print('Reszvenyek: Currency changed to ${_currencyState.selectedCurrency}');
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  void _onThemeChanged() {
     if (mounted) {
       setState(() {});
     }
@@ -198,6 +234,8 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return SafeArea(
       child: Column(
         children: [
@@ -209,7 +247,7 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
               children: [
                 // Back button
                 IconButton(
-                  icon: Icon(TablerIcons.arrow_left, size: 24),
+                  icon: Icon(TablerIcons.arrow_left, size: 24, color: colors.textPrimary),
                   onPressed: () {
                     if (widget.onBack != null) {
                       widget.onBack!();
@@ -227,7 +265,7 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
                       Text(
                         'Részvények',
                         style: TextStyle(
-                          color: const Color(0xFF1D293D),
+                          color: colors.textPrimary,
                           fontSize: 22,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -238,7 +276,7 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
                       Text(
                         _accountState.selectedAccount,
                         style: TextStyle(
-                          color: const Color(0xFF45556C),
+                          color: colors.textSecondary,
                           fontSize: 14,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -252,7 +290,7 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
                 ),
                 // Circle chevron down button
                 IconButton(
-                  icon: Icon(TablerIcons.circle_chevron_down, size: 24),
+                  icon: Icon(TablerIcons.circle_chevron_down, size: 24, color: colors.textPrimary),
                   onPressed: _showAccountSelectorBottomSheet,
                 ),
               ],
@@ -264,7 +302,7 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: colors.surfaceElevated,
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -291,7 +329,7 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
 
                       final profitPercent = totalCostInHUF > 0 ? (totalUnrealizedProfitInHUF / totalCostInHUF * 100) : 0;
                       final isPositive = totalUnrealizedProfit >= 0;
-                      final profitColor = isPositive ? const Color(0xFF007A55) : const Color(0xFFEC003F);
+                      final profitColor = isPositive ? colors.success : colors.error;
 
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,7 +337,7 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
                           Text(
                             '${_formatCurrency(totalValue)} ${_currencyState.selectedCurrency}',
                             style: TextStyle(
-                              color: const Color(0xFF1D293D),
+                              color: colors.textPrimary,
                               fontSize: 28,
                               fontFamily: 'Inter',
                               fontWeight: FontWeight.w500,
@@ -311,7 +349,7 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
                           Text(
                             'Nem realizált eredmény',
                             style: TextStyle(
-                              color: const Color(0xFF45556C),
+                              color: colors.textSecondary,
                               fontSize: 12,
                               fontFamily: 'Inter',
                               fontWeight: FontWeight.w400,
@@ -362,7 +400,7 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
                         decoration: BoxDecoration(
                           border: Border.all(
                             width: 1,
-                            color: const Color(0xFFCAD5E2),
+                            color: colors.border,
                           ),
                           borderRadius: BorderRadius.circular(4),
                         ),
@@ -373,14 +411,14 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
                               child: Text(
                                 _currencyState.selectedCurrency,
                                 style: TextStyle(
-                                  color: const Color(0xFF1D293D),
+                                  color: colors.textPrimary,
                                   fontSize: 16,
                                   fontFamily: 'Inter',
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
                             ),
-                            Icon(TablerIcons.chevron_down, size: 16),
+                            Icon(TablerIcons.chevron_down, size: 16, color: colors.textSecondary),
                           ],
                         ),
                       ),
@@ -390,11 +428,11 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
                       top: -8,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 4),
-                        color: const Color(0xFFF8FAFC),
+                        color: colors.surfaceElevated,
                         child: Text(
                           'Összesítés',
                           style: TextStyle(
-                            color: const Color(0xFF45556C),
+                            color: colors.textSecondary,
                             fontSize: 12,
                             fontFamily: 'Inter',
                             fontWeight: FontWeight.w400,
@@ -413,15 +451,15 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: colors.surfaceElevated,
               border: Border(
                 top: BorderSide(
                   width: 1,
-                  color: const Color(0xFFE2E8F0),
+                  color: colors.border,
                 ),
                 bottom: BorderSide(
                   width: 1,
-                  color: const Color(0xFFE2E8F0),
+                  color: colors.border,
                 ),
               ),
             ),
@@ -434,7 +472,7 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
                     Text(
                       'Termék',
                       style: TextStyle(
-                        color: const Color(0xFF45556C),
+                        color: colors.textSecondary,
                         fontSize: 12,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -446,7 +484,7 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
                       'Teljes érték',
                       textAlign: TextAlign.right,
                       style: TextStyle(
-                        color: const Color(0xFF45556C),
+                        color: colors.textSecondary,
                         fontSize: 12,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -464,7 +502,7 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
                       child: Text(
                         'Össz. darab @ átl. ár',
                         style: TextStyle(
-                          color: const Color(0xFF45556C),
+                          color: colors.textSecondary,
                           fontSize: 12,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -483,7 +521,7 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
                               'Eredm. %',
                               textAlign: TextAlign.right,
                               style: TextStyle(
-                                color: const Color(0xFF45556C),
+                                color: colors.textSecondary,
                                 fontSize: 12,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w500,
@@ -498,7 +536,7 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
                               'Eredmény',
                               textAlign: TextAlign.right,
                               style: TextStyle(
-                                color: const Color(0xFF45556C),
+                                color: colors.textSecondary,
                                 fontSize: 12,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w500,
@@ -566,7 +604,8 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
     String valueChange,
     bool isPositive,
   ) {
-    Color changeColor = isPositive ? const Color(0xFF007A55) : const Color(0xFFEC003F);
+    final colors = AppColors(isDark: _themeState.isDark);
+    Color changeColor = isPositive ? colors.success : colors.error;
 
     return InkWell(
       onTap: () {
@@ -587,7 +626,7 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
           border: Border(
             bottom: BorderSide(
               width: 1,
-              color: const Color(0xFFE2E8F0),
+              color: colors.border,
             ),
           ),
         ),
@@ -600,7 +639,7 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
               Text(
                 name,
                 style: TextStyle(
-                  color: const Color(0xFF1D293D),
+                  color: colors.textPrimary,
                   fontSize: 16,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w500,
@@ -612,7 +651,7 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
                 totalValue,
                 textAlign: TextAlign.right,
                 style: TextStyle(
-                  color: const Color(0xFF1D293D),
+                  color: colors.textPrimary,
                   fontSize: 16,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w400,
@@ -630,7 +669,7 @@ class _ReszvenyekContentState extends State<ReszvenyekContent> {
                 child: Text(
                   quantity,
                   style: TextStyle(
-                    color: const Color(0xFF45556C),
+                    color: colors.textSecondary,
                     fontSize: 14,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w400,
@@ -702,18 +741,32 @@ class CurrencySelectorBottomSheet extends StatefulWidget {
 
 class _CurrencySelectorBottomSheetState extends State<CurrencySelectorBottomSheet> {
   late String _currentSelection;
+  final ThemeState _themeState = ThemeState();
 
   @override
   void initState() {
     super.initState();
     _currentSelection = widget.selectedCurrency;
+    _themeState.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    _themeState.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.background,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
@@ -739,7 +792,7 @@ class _CurrencySelectorBottomSheetState extends State<CurrencySelectorBottomShee
                     child: Text(
                       'Összesítés devizaneme',
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 22,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -752,7 +805,7 @@ class _CurrencySelectorBottomSheetState extends State<CurrencySelectorBottomShee
                   width: 48,
                   height: 48,
                   child: IconButton(
-                    icon: Icon(TablerIcons.x, size: 24),
+                    icon: Icon(TablerIcons.x, size: 24, color: colors.textPrimary),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ),
@@ -778,6 +831,7 @@ class _CurrencySelectorBottomSheetState extends State<CurrencySelectorBottomShee
   }
 
   Widget _buildCurrencyOption(BuildContext context, String currency) {
+    final colors = AppColors(isDark: _themeState.isDark);
     final bool isSelected = currency == _currentSelection;
 
     return InkWell(
@@ -791,14 +845,14 @@ class _CurrencySelectorBottomSheetState extends State<CurrencySelectorBottomShee
         width: double.infinity,
         height: 56,
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFFEF3C6) : Colors.transparent,
+          color: isSelected ? colors.accent : Colors.transparent,
           borderRadius: BorderRadius.circular(100),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Text(
           currency,
           style: TextStyle(
-            color: isSelected ? const Color(0xFF1D293D) : const Color(0xFF45556C),
+            color: isSelected ? colors.textPrimary : colors.textSecondary,
             fontSize: 14,
             fontFamily: 'Inter',
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,

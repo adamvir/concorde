@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:cc_new/screens/phone_number_bottom_sheet.dart';
 import 'package:cc_new/screens/pin_setup_page.dart';
+import '../state/theme_state.dart' as app_theme;
+import '../theme/app_colors.dart';
 
 class LoginHitelesTSDefault extends StatefulWidget {
   const LoginHitelesTSDefault({super.key});
@@ -17,11 +19,17 @@ class _LoginHitelesTSDefaultState extends State<LoginHitelesTSDefault> {
   Timer? _timer;
   bool _hasError = false;
   String _errorMessage = '';
+  final app_theme.ThemeState _themeState = app_theme.ThemeState();
 
   @override
   void initState() {
     super.initState();
+    _themeState.addListener(_onThemeChanged);
     _startCountdown();
+  }
+
+  void _onThemeChanged() {
+    setState(() {});
   }
 
   void _startCountdown() {
@@ -38,12 +46,14 @@ class _LoginHitelesTSDefaultState extends State<LoginHitelesTSDefault> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Background circle decoration (bottom left)
+          // Background circle decoration (bottom left) - brand color
           Positioned(
             left: -300,
             bottom: -515,
@@ -54,7 +64,7 @@ class _LoginHitelesTSDefaultState extends State<LoginHitelesTSDefault> {
                 shape: OvalBorder(
                   side: BorderSide(
                     width: 60,
-                    color: const Color(0xFFFD9A00),
+                    color: colors.primary,
                   ),
                 ),
               ),
@@ -73,14 +83,14 @@ class _LoginHitelesTSDefaultState extends State<LoginHitelesTSDefault> {
                     Row(
                       children: [
                         IconButton(
-                          icon: Icon(TablerIcons.arrow_left, color: Color(0xFF1D293D)),
+                          icon: Icon(TablerIcons.arrow_left, color: colors.textPrimary),
                           onPressed: () => Navigator.pop(context),
                         ),
                         SizedBox(width: 8),
                         Text(
                           'Hitelesítés SMS-sel',
                           style: TextStyle(
-                            color: const Color(0xFF1D293D),
+                            color: colors.textPrimary,
                             fontSize: 22,
                             fontFamily: 'Inter',
                             fontWeight: FontWeight.w500,
@@ -94,7 +104,7 @@ class _LoginHitelesTSDefaultState extends State<LoginHitelesTSDefault> {
                       'Adja meg az 0670****398 számra SMS-ben kapott egyszeri jelszót! ',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 16,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w400,
@@ -125,7 +135,7 @@ class _LoginHitelesTSDefaultState extends State<LoginHitelesTSDefault> {
                                 padding: EdgeInsets.all(12),
                                 child: Icon(
                                   TablerIcons.alert_circle_filled,
-                                  color: Color(0xFFBA1A1A),
+                                  color: colors.error,
                                   size: 24,
                                 ),
                               )
@@ -135,8 +145,8 @@ class _LoginHitelesTSDefaultState extends State<LoginHitelesTSDefault> {
                           borderSide: BorderSide(
                             width: 1,
                             color: _hasError
-                                ? const Color(0xFFBA1A1A)
-                                : const Color(0xFFCAD5E2),
+                                ? colors.error
+                                : colors.inputBorder,
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -144,22 +154,22 @@ class _LoginHitelesTSDefaultState extends State<LoginHitelesTSDefault> {
                           borderSide: BorderSide(
                             width: _hasError ? 2 : 3,
                             color: _hasError
-                                ? const Color(0xFFBA1A1A)
-                                : const Color(0xFF1D293D),
+                                ? colors.error
+                                : colors.textPrimary,
                           ),
                         ),
                         errorBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(4),
                           borderSide: BorderSide(
                             width: 1,
-                            color: const Color(0xFFBA1A1A),
+                            color: colors.error,
                           ),
                         ),
                         focusedErrorBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(4),
                           borderSide: BorderSide(
                             width: 2,
-                            color: const Color(0xFFBA1A1A),
+                            color: colors.error,
                           ),
                         ),
                         contentPadding: EdgeInsets.symmetric(
@@ -171,7 +181,7 @@ class _LoginHitelesTSDefaultState extends State<LoginHitelesTSDefault> {
                         fontSize: 18,
                         fontWeight: FontWeight.w400,
                         letterSpacing: 4,
-                        color: _hasError ? const Color(0xFFBA1A1A) : null,
+                        color: _hasError ? colors.error : colors.textPrimary,
                       ),
                     ),
                     if (_hasError) ...[
@@ -180,7 +190,7 @@ class _LoginHitelesTSDefaultState extends State<LoginHitelesTSDefault> {
                         _errorMessage,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: const Color(0xFF93000A),
+                          color: colors.error,
                           fontSize: 12,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w400,
@@ -194,8 +204,8 @@ class _LoginHitelesTSDefaultState extends State<LoginHitelesTSDefault> {
                       child: ElevatedButton(
                         onPressed: _handleContinue,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1D293D),
-                          foregroundColor: Colors.white,
+                          backgroundColor: colors.textPrimary,
+                          foregroundColor: colors.background,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(100),
                           ),
@@ -226,10 +236,10 @@ class _LoginHitelesTSDefaultState extends State<LoginHitelesTSDefault> {
                       child: ElevatedButton(
                         onPressed: _countdown == 0 ? _handleResendCode : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0x19191C20),
-                          foregroundColor: const Color(0xFF1D293D),
-                          disabledBackgroundColor: const Color(0x19191C20),
-                          disabledForegroundColor: const Color(0xFF1D293D).withValues(alpha: 0.38),
+                          backgroundColor: colors.surfaceElevated,
+                          foregroundColor: colors.textPrimary,
+                          disabledBackgroundColor: colors.surfaceElevated,
+                          disabledForegroundColor: colors.textPrimary.withValues(alpha: 0.38),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(100),
                           ),
@@ -255,10 +265,10 @@ class _LoginHitelesTSDefaultState extends State<LoginHitelesTSDefault> {
                       child: OutlinedButton(
                         onPressed: _handlePhoneAuthentication,
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF45556C),
+                          foregroundColor: colors.textSecondary,
                           side: BorderSide(
                             width: 1,
-                            color: const Color(0xFFE2E8F0),
+                            color: colors.border,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(100),
@@ -290,7 +300,7 @@ class _LoginHitelesTSDefaultState extends State<LoginHitelesTSDefault> {
                         'Elvesztettem a hozzáférésem a számhoz',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: const Color(0xFF45556C),
+                          color: colors.textSecondary,
                           fontSize: 14,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -305,7 +315,7 @@ class _LoginHitelesTSDefaultState extends State<LoginHitelesTSDefault> {
                       child: Text(
                         'Kód küldése másik számra',
                         style: TextStyle(
-                          color: const Color(0xFF45556C),
+                          color: colors.textSecondary,
                           fontSize: 14,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -390,6 +400,7 @@ class _LoginHitelesTSDefaultState extends State<LoginHitelesTSDefault> {
 
   @override
   void dispose() {
+    _themeState.removeListener(_onThemeChanged);
     _timer?.cancel();
     _smsCodeController.dispose();
     super.dispose();

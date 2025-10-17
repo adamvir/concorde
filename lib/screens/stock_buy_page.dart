@@ -6,6 +6,8 @@ import '../data/mock_portfolio_data.dart';
 import 'order_confirmation_page.dart';
 import '../widgets/order_success_snackbar.dart';
 import '../models/order_model.dart';
+import '../state/theme_state.dart';
+import '../theme/app_colors.dart';
 
 class StockBuyPage extends StatefulWidget {
   final String stockName;
@@ -36,6 +38,7 @@ class _StockBuyPageState extends State<StockBuyPage> {
   final TextEditingController _icebergQuantityController = TextEditingController();
   final TransactionService _transactionService = TransactionService();
   final MockPortfolioData _portfolioData = MockPortfolioData();
+  final ThemeState _themeState = ThemeState();
 
   OrderType _orderType = OrderType.limit;
   String _selectedAccount = 'TBSZ-2023';
@@ -51,6 +54,7 @@ class _StockBuyPageState extends State<StockBuyPage> {
   void initState() {
     super.initState();
     _selectedOrderDirection = widget.initialTradeType; // Set from navigation
+    _themeState.addListener(_onThemeChanged);
 
     // Check if editing an existing order
     if (widget.existingOrder != null) {
@@ -78,8 +82,15 @@ class _StockBuyPageState extends State<StockBuyPage> {
     _icebergQuantityController.text = '10';
   }
 
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   @override
   void dispose() {
+    _themeState.removeListener(_onThemeChanged);
     _quantityController.dispose();
     _priceController.dispose();
     _stopPriceController.dispose();
@@ -277,8 +288,10 @@ class _StockBuyPageState extends State<StockBuyPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -304,6 +317,8 @@ class _StockBuyPageState extends State<StockBuyPage> {
   }
 
   Widget _buildHeader() {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Container(
       width: double.infinity,
       height: 64,
@@ -311,14 +326,14 @@ class _StockBuyPageState extends State<StockBuyPage> {
       child: Row(
         children: [
           IconButton(
-            icon: Icon(TablerIcons.x, size: 24, color: Color(0xFF1D293D)),
+            icon: Icon(TablerIcons.x, size: 24, color: colors.textPrimary),
             onPressed: () => Navigator.pop(context),
           ),
           Expanded(
             child: Text(
               '$_selectedOrderDirection - ${widget.stockName}',
               style: TextStyle(
-                color: Color(0xFF1D293D),
+                color: colors.textPrimary,
                 fontSize: 22,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w500,
@@ -332,11 +347,13 @@ class _StockBuyPageState extends State<StockBuyPage> {
   }
 
   Widget _buildPriceSection() {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: colors.surfaceElevated,
       ),
       child: Column(
         children: [
@@ -348,7 +365,7 @@ class _StockBuyPageState extends State<StockBuyPage> {
                   Text(
                     '${widget.currentPrice.toStringAsFixed(2)} ${widget.currency}',
                     style: TextStyle(
-                      color: Color(0xFF1D293D),
+                      color: colors.textPrimary,
                       fontSize: 16,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,
@@ -359,7 +376,7 @@ class _StockBuyPageState extends State<StockBuyPage> {
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Color(0xFFFF637E),
+                      color: colors.delayBadge,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -377,7 +394,7 @@ class _StockBuyPageState extends State<StockBuyPage> {
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Color(0xFFF59E0B),
+                      color: colors.preMarketBadge,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -396,7 +413,7 @@ class _StockBuyPageState extends State<StockBuyPage> {
               Text(
                 'V 450 db @ 146,90',
                 style: TextStyle(
-                  color: Color(0xFF45556C),
+                  color: colors.textSecondary,
                   fontSize: 16,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w400,
@@ -411,7 +428,7 @@ class _StockBuyPageState extends State<StockBuyPage> {
               Text(
                 '+4,43% (6,24)',
                 style: TextStyle(
-                  color: Color(0xFF007A55),
+                  color: colors.success,
                   fontSize: 16,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w400,
@@ -420,7 +437,7 @@ class _StockBuyPageState extends State<StockBuyPage> {
               Text(
                 'E 1.045 db @ 147,08',
                 style: TextStyle(
-                  color: Color(0xFF45556C),
+                  color: colors.textSecondary,
                   fontSize: 16,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w400,
@@ -506,6 +523,7 @@ class _StockBuyPageState extends State<StockBuyPage> {
   }
 
   Widget _buildSummarySection() {
+    final colors = AppColors(isDark: _themeState.isDark);
     double availableCash = _getAvailableCash();
     double totalCost = _calculateTotalCost();
     int quantity = int.tryParse(_quantityController.text) ?? 0;
@@ -518,7 +536,7 @@ class _StockBuyPageState extends State<StockBuyPage> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         border: Border(
-          top: BorderSide(color: Color(0xFFE2E8F0)),
+          top: BorderSide(color: colors.border),
         ),
       ),
       child: Column(
@@ -552,6 +570,8 @@ class _StockBuyPageState extends State<StockBuyPage> {
   }
 
   Widget _buildAdvancedSettingsSection() {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Column(
       children: [
         InkWell(
@@ -564,7 +584,7 @@ class _StockBuyPageState extends State<StockBuyPage> {
                 Text(
                   'Haladó beállítások',
                   style: TextStyle(
-                    color: Color(0xFF1D293D),
+                    color: colors.textPrimary,
                     fontSize: 22,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w500,
@@ -572,7 +592,7 @@ class _StockBuyPageState extends State<StockBuyPage> {
                 ),
                 Icon(
                   _advancedSettingsExpanded ? TablerIcons.chevron_up : TablerIcons.chevron_down,
-                  color: Color(0xFF1D293D),
+                  color: colors.textPrimary,
                 ),
               ],
             ),
@@ -622,13 +642,13 @@ class _StockBuyPageState extends State<StockBuyPage> {
                         SizedBox(height: 8),
                         Row(
                           children: [
-                            Icon(TablerIcons.alert_circle, size: 16, color: Color(0xFFEC003F)),
+                            Icon(TablerIcons.alert_circle, size: 16, color: colors.error),
                             SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 '-33,02% - Túl alacsony ár',
                                 style: TextStyle(
-                                  color: Color(0xFFEC003F),
+                                  color: colors.error,
                                   fontSize: 12,
                                   fontFamily: 'Inter',
                                   fontWeight: FontWeight.w400,
@@ -663,17 +683,18 @@ class _StockBuyPageState extends State<StockBuyPage> {
   }
 
   Widget _buildBottomButton() {
+    final colors = AppColors(isDark: _themeState.isDark);
     bool isSell = _selectedOrderDirection == 'Eladás';
     bool isEditMode = widget.existingOrder != null;
 
     // Dynamic colors: Módosítás = dark grey, Vétel = green, Eladás = red
     Color buttonColor;
     if (isEditMode) {
-      buttonColor = const Color(0xFF1D293D); // Dark grey for edit
+      buttonColor = colors.textPrimary; // Use theme-aware text primary for edit
     } else if (isSell) {
-      buttonColor = const Color(0xFFEC003F); // Red for sell
+      buttonColor = colors.error; // Red for sell
     } else {
-      buttonColor = const Color(0xFF009966); // Green for buy
+      buttonColor = colors.success; // Green for buy
     }
 
     String buttonText = isEditMode
@@ -683,8 +704,8 @@ class _StockBuyPageState extends State<StockBuyPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+        color: colors.background,
+        border: Border(top: BorderSide(color: colors.border)),
       ),
       child: SafeArea(
         child: ElevatedButton(
@@ -726,15 +747,17 @@ class _StockBuyPageState extends State<StockBuyPage> {
     String? helperText,
     bool isDisabled = false,
   }) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           height: 56,
           decoration: BoxDecoration(
-            border: Border.all(color: isDisabled ? Color(0xFFE2E8F0) : Color(0xFFCAD5E2)),
+            border: Border.all(color: isDisabled ? colors.border : colors.inputBorder),
             borderRadius: BorderRadius.circular(4),
-            color: isDisabled ? Color(0xFFF8FAFC) : Colors.white,
+            color: isDisabled ? colors.surfaceElevated : colors.inputBackground,
           ),
           child: Stack(
             clipBehavior: Clip.none,
@@ -748,9 +771,10 @@ class _StockBuyPageState extends State<StockBuyPage> {
                         child: DropdownButton<String>(
                           value: value,
                           isExpanded: true,
-                          icon: Icon(TablerIcons.refresh, size: 16, color: isDisabled ? Color(0xFFCAD5E2) : null),
+                          icon: Icon(TablerIcons.refresh, size: 16, color: isDisabled ? colors.border : colors.textSecondary),
+                          dropdownColor: colors.surface,
                           style: TextStyle(
-                            color: isDisabled ? Color(0xFF94A3B8) : Color(0xFF1D293D),
+                            color: isDisabled ? colors.textTertiary : colors.textPrimary,
                             fontSize: 16,
                             fontFamily: 'Inter',
                             fontWeight: FontWeight.w400,
@@ -770,11 +794,11 @@ class _StockBuyPageState extends State<StockBuyPage> {
                 top: -8,
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 4),
-                  color: Colors.white,
+                  color: isDisabled ? colors.surfaceElevated : colors.inputBackground,
                   child: Text(
                     label,
                     style: TextStyle(
-                      color: Color(0xFF45556C),
+                      color: colors.textSecondary,
                       fontSize: 12,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w400,
@@ -791,7 +815,7 @@ class _StockBuyPageState extends State<StockBuyPage> {
             child: Text(
               helperText,
               style: TextStyle(
-                color: Color(0xFF45556C),
+                color: colors.textSecondary,
                 fontSize: 12,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w400,
@@ -810,15 +834,17 @@ class _StockBuyPageState extends State<StockBuyPage> {
     Color? helperColor,
     bool enabled = true,
   }) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           height: 56,
           decoration: BoxDecoration(
-            border: Border.all(color: Color(0xFFCAD5E2)),
+            border: Border.all(color: colors.inputBorder),
             borderRadius: BorderRadius.circular(4),
-            color: enabled ? Colors.white : Color(0xFFF8FAFC),
+            color: enabled ? colors.inputBackground : colors.surfaceElevated,
           ),
           child: Stack(
             clipBehavior: Clip.none,
@@ -830,7 +856,7 @@ class _StockBuyPageState extends State<StockBuyPage> {
                   enabled: enabled,
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
                   style: TextStyle(
-                    color: enabled ? Color(0xFF1D293D) : Color(0xFF94A3B8),
+                    color: enabled ? colors.textPrimary : colors.textTertiary,
                     fontSize: 16,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w400,
@@ -841,7 +867,7 @@ class _StockBuyPageState extends State<StockBuyPage> {
                     contentPadding: EdgeInsets.zero,
                     suffixText: suffix,
                     suffixStyle: TextStyle(
-                      color: enabled ? Color(0xFF1D293D) : Color(0xFF94A3B8),
+                      color: enabled ? colors.textPrimary : colors.textTertiary,
                       fontSize: 16,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w400,
@@ -855,11 +881,11 @@ class _StockBuyPageState extends State<StockBuyPage> {
                 top: -8,
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 4),
-                  color: Colors.white,
+                  color: enabled ? colors.inputBackground : colors.surfaceElevated,
                   child: Text(
                     label,
                     style: TextStyle(
-                      color: Color(0xFF45556C),
+                      color: colors.textSecondary,
                       fontSize: 12,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w400,
@@ -876,7 +902,7 @@ class _StockBuyPageState extends State<StockBuyPage> {
             child: Text(
               helperText,
               style: TextStyle(
-                color: helperColor ?? Color(0xFF45556C),
+                color: helperColor ?? colors.textSecondary,
                 fontSize: 12,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w400,
@@ -888,6 +914,8 @@ class _StockBuyPageState extends State<StockBuyPage> {
   }
 
   Widget _buildSummaryRow(String label, String value, {bool hasIcon = false}) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -896,24 +924,24 @@ class _StockBuyPageState extends State<StockBuyPage> {
             Text(
               label,
               style: TextStyle(
-                color: Color(0xFF45556C),
+                color: colors.textSecondary,
                 fontSize: 16,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w400,
               ),
             ),
             if (hasIcon) SizedBox(width: 8),
-            if (hasIcon) Icon(TablerIcons.info_circle, size: 16, color: Color(0xFF45556C)),
+            if (hasIcon) Icon(TablerIcons.info_circle, size: 16, color: colors.textSecondary),
           ],
         ),
         Row(
           children: [
-            if (hasIcon) Icon(TablerIcons.arrow_up, size: 16, color: Color(0xFF1D293D)),
+            if (hasIcon) Icon(TablerIcons.arrow_up, size: 16, color: colors.textPrimary),
             if (hasIcon) SizedBox(width: 4),
             Text(
               value,
               style: TextStyle(
-                color: Color(0xFF1D293D),
+                color: colors.textPrimary,
                 fontSize: 16,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w400,
@@ -927,20 +955,29 @@ class _StockBuyPageState extends State<StockBuyPage> {
   }
 
   Widget _buildCheckbox(String label, bool value, Function(bool?) onChanged) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Row(
       children: [
         Checkbox(
           value: value,
           onChanged: onChanged,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
-          side: BorderSide(width: 2, color: Color(0xFF45556C)),
+          side: BorderSide(width: 2, color: colors.textSecondary),
+          fillColor: WidgetStateProperty.resolveWith<Color>((states) {
+            if (states.contains(WidgetState.selected)) {
+              return colors.textPrimary;
+            }
+            return colors.inputBackground;
+          }),
+          checkColor: Colors.white,
         ),
         SizedBox(width: 8),
         Expanded(
           child: Text(
             label,
             style: TextStyle(
-              color: Color(0xFF1D293D),
+              color: colors.textPrimary,
               fontSize: 16,
               fontFamily: 'Inter',
               fontWeight: FontWeight.w400,

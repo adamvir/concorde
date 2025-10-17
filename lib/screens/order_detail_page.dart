@@ -3,6 +3,8 @@ import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:intl/intl.dart';
 import '../models/order_model.dart';
 import '../services/transaction_service.dart';
+import '../state/theme_state.dart';
+import '../theme/app_colors.dart';
 import 'stock_buy_page.dart';
 
 class OrderDetailPage extends StatefulWidget {
@@ -19,23 +21,43 @@ class OrderDetailPage extends StatefulWidget {
 
 class _OrderDetailPageState extends State<OrderDetailPage> {
   final TransactionService _transactionService = TransactionService();
+  final ThemeState _themeState = ThemeState();
   bool _isGeneralExpanded = true;
   bool _isOrderedExpanded = true;
   bool _isFulfilledExpanded = true;
   bool _isPartialFulfillmentsExpanded = true;
 
   @override
+  void initState() {
+    super.initState();
+    _themeState.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    _themeState.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
     final bool isBuy = widget.order.action == OrderAction.buy;
     final bool isOpen = widget.order.status == OrderStatus.open;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: colors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(TablerIcons.arrow_left, color: Color(0xFF1D293D)),
+          icon: Icon(TablerIcons.arrow_left, color: colors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -43,8 +65,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           children: [
             Text(
               '${widget.order.stockName} - ${isBuy ? 'Vétel' : 'Eladás'}',
-              style: const TextStyle(
-                color: Color(0xFF1D293D),
+              style: TextStyle(
+                color: colors.textPrimary,
                 fontSize: 22,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w500,
@@ -52,8 +74,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             ),
             Text(
               '${widget.order.getStatusLabel()} - ${widget.order.accountName}',
-              style: const TextStyle(
-                color: Color(0xFF45556C),
+              style: TextStyle(
+                color: colors.textSecondary,
                 fontSize: 14,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w500,
@@ -63,7 +85,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(TablerIcons.info_circle, color: Color(0xFF1D293D)),
+            icon: Icon(TablerIcons.info_circle, color: colors.textPrimary),
             onPressed: () {
               // Show info dialog
             },
@@ -92,6 +114,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Widget _buildGeneralSection() {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Column(
       children: [
         InkWell(
@@ -102,17 +126,17 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             padding: const EdgeInsets.only(left: 16, right: 4),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   TablerIcons.info_circle,
-                  color: Color(0xFFFF9800),
+                  color: colors.warning,
                   size: 24,
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Általános',
                     style: TextStyle(
-                      color: Color(0xFF1D293D),
+                      color: colors.textPrimary,
                       fontSize: 22,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,
@@ -122,7 +146,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 IconButton(
                   icon: Icon(
                     _isGeneralExpanded ? TablerIcons.chevron_up : TablerIcons.chevron_down,
-                    color: Color(0xFF1D293D),
+                    color: colors.textPrimary,
                   ),
                   onPressed: () => setState(() => _isGeneralExpanded = !_isGeneralExpanded),
                 ),
@@ -134,9 +158,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               border: Border(
-                bottom: BorderSide(color: Color(0xFFE2E8F0)),
+                bottom: BorderSide(color: colors.border),
               ),
             ),
             child: Column(
@@ -162,6 +186,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Widget _buildOrderedSection() {
+    final colors = AppColors(isDark: _themeState.isDark);
     final String priceText = widget.order.isMarketOrder
         ? 'Piaci'
         : '${_formatNumber(widget.order.limitPrice!)} ${widget.order.currency}';
@@ -176,17 +201,17 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             padding: const EdgeInsets.only(left: 16, right: 4),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   TablerIcons.file_text,
-                  color: Color(0xFFFF9800),
+                  color: colors.warning,
                   size: 24,
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Beadva',
                     style: TextStyle(
-                      color: Color(0xFF1D293D),
+                      color: colors.textPrimary,
                       fontSize: 22,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,
@@ -196,7 +221,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 IconButton(
                   icon: Icon(
                     _isOrderedExpanded ? TablerIcons.chevron_up : TablerIcons.chevron_down,
-                    color: Color(0xFF1D293D),
+                    color: colors.textPrimary,
                   ),
                   onPressed: () => setState(() => _isOrderedExpanded = !_isOrderedExpanded),
                 ),
@@ -208,9 +233,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               border: Border(
-                bottom: BorderSide(color: Color(0xFFE2E8F0)),
+                bottom: BorderSide(color: colors.border),
               ),
             ),
             child: Column(
@@ -234,6 +259,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Widget _buildFulfilledSection() {
+    final colors = AppColors(isDark: _themeState.isDark);
     final bool hasFulfillment = widget.order.fulfilledQuantity > 0;
     final double avgPrice = hasFulfillment && widget.order.limitPrice != null
         ? widget.order.limitPrice!
@@ -249,17 +275,17 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             padding: const EdgeInsets.only(left: 16, right: 4),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   TablerIcons.circle_check,
-                  color: Color(0xFFFF9800),
+                  color: colors.warning,
                   size: 24,
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Teljesült',
                     style: TextStyle(
-                      color: Color(0xFF1D293D),
+                      color: colors.textPrimary,
                       fontSize: 22,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,
@@ -269,7 +295,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 IconButton(
                   icon: Icon(
                     _isFulfilledExpanded ? TablerIcons.chevron_up : TablerIcons.chevron_down,
-                    color: Color(0xFF1D293D),
+                    color: colors.textPrimary,
                   ),
                   onPressed: () => setState(() => _isFulfilledExpanded = !_isFulfilledExpanded),
                 ),
@@ -281,9 +307,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               border: Border(
-                bottom: BorderSide(color: Color(0xFFE2E8F0)),
+                bottom: BorderSide(color: colors.border),
               ),
             ),
             child: Column(
@@ -309,6 +335,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Widget _buildPartialFulfillmentsSection() {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Column(
       children: [
         InkWell(
@@ -319,17 +347,17 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             padding: const EdgeInsets.only(left: 16, right: 4),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   TablerIcons.repeat,
-                  color: Color(0xFFFF9800),
+                  color: colors.warning,
                   size: 24,
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Részteljesülések',
                     style: TextStyle(
-                      color: Color(0xFF1D293D),
+                      color: colors.textPrimary,
                       fontSize: 22,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,
@@ -339,7 +367,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 IconButton(
                   icon: Icon(
                     _isPartialFulfillmentsExpanded ? TablerIcons.chevron_up : TablerIcons.chevron_down,
-                    color: Color(0xFF1D293D),
+                    color: colors.textPrimary,
                   ),
                   onPressed: () => setState(() => _isPartialFulfillmentsExpanded = !_isPartialFulfillmentsExpanded),
                 ),
@@ -374,12 +402,14 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Widget _buildPartialFulfillmentItem(DateTime date, int quantity, double price, double value) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: Color(0xFFE2E8F0)),
+          bottom: BorderSide(color: colors.border),
         ),
       ),
       child: Column(
@@ -390,8 +420,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             children: [
               Text(
                 _formatDateTime(date),
-                style: const TextStyle(
-                  color: Color(0xFF1D293D),
+                style: TextStyle(
+                  color: colors.textPrimary,
                   fontSize: 16,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w500,
@@ -399,8 +429,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               ),
               Text(
                 '${_formatNumber(value)} ${widget.order.currency}',
-                style: const TextStyle(
-                  color: Color(0xFF1D293D),
+                style: TextStyle(
+                  color: colors.textPrimary,
                   fontSize: 16,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w400,
@@ -411,8 +441,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           const SizedBox(height: 2),
           Text(
             '$quantity db @ ${_formatNumber(price)} ${widget.order.currency}',
-            style: const TextStyle(
-              color: Color(0xFF45556C),
+            style: TextStyle(
+              color: colors.textSecondary,
               fontSize: 14,
               fontFamily: 'Inter',
               fontWeight: FontWeight.w400,
@@ -424,13 +454,15 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Widget _buildDetailRow(String label, String value, {bool isUnderlined = false}) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: const TextStyle(
-            color: Color(0xFF45556C),
+          style: TextStyle(
+            color: colors.textSecondary,
             fontSize: 16,
             fontFamily: 'Inter',
             fontWeight: FontWeight.w400,
@@ -439,7 +471,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         Text(
           value,
           style: TextStyle(
-            color: const Color(0xFF1D293D),
+            color: colors.textPrimary,
             fontSize: 16,
             fontFamily: 'Inter',
             fontWeight: FontWeight.w400,
@@ -451,12 +483,14 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Widget _buildBottomButtons() {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: colors.background,
         border: Border(
-          top: BorderSide(color: Color(0xFFE2E8F0)),
+          top: BorderSide(color: colors.border),
         ),
       ),
       child: Column(
@@ -470,8 +504,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                   child: ElevatedButton(
                     onPressed: _handleModify,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1D293D),
-                      foregroundColor: Colors.white,
+                      backgroundColor: colors.textPrimary,
+                      foregroundColor: colors.background,
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(100),
@@ -499,8 +533,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                   child: ElevatedButton(
                     onPressed: _handleCancel,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1D293D),
-                      foregroundColor: Colors.white,
+                      backgroundColor: colors.textPrimary,
+                      foregroundColor: colors.background,
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(100),
@@ -530,13 +564,13 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           Container(
             width: double.infinity,
             height: 24,
-            color: Colors.white,
+            color: colors.background,
             child: Center(
               child: Container(
                 width: 108,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1D293D),
+                  color: colors.textPrimary,
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
@@ -569,6 +603,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   void _handleCancel() {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -585,15 +621,15 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               Navigator.pop(context); // Close dialog
               Navigator.pop(context); // Return to orders list
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
+                SnackBar(
                   content: Text('Megbízás visszavonva'),
-                  backgroundColor: Color(0xFFEC003F),
+                  backgroundColor: colors.error,
                 ),
               );
             },
-            child: const Text(
+            child: Text(
               'Visszavon',
-              style: TextStyle(color: Color(0xFFEC003F)),
+              style: TextStyle(color: colors.error),
             ),
           ),
         ],

@@ -8,6 +8,8 @@ import 'megbizasok_page.dart';
 import '../widgets/account_selector_bottom_sheet.dart' as account_chooser;
 import '../state/account_state.dart';
 import '../state/currency_state.dart';
+import '../state/theme_state.dart' as app_theme;
+import '../theme/app_colors.dart';
 import '../data/mock_portfolio_data.dart';
 import '../services/transaction_service.dart';
 
@@ -17,8 +19,10 @@ class PortfolioPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: app_theme.ThemeState().isDark);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: SafeArea(
         bottom: false,
         child: PortfolioContent(),
@@ -42,6 +46,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
   String _selectedPeriod = '1M'; // Selected time period for value change chart
   final AccountState _accountState = AccountState();
   final CurrencyState _currencyState = CurrencyState();
+  final app_theme.ThemeState _themeState = app_theme.ThemeState();
   final MockPortfolioData _portfolioData = MockPortfolioData();
   final TransactionService _transactionService = TransactionService();
 
@@ -50,6 +55,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
     super.initState();
     _accountState.addListener(_onAccountChanged);
     _currencyState.addListener(_onCurrencyChanged);
+    _themeState.addListener(_onThemeChanged);
     _transactionService.addListener(_onTransactionChanged);
   }
 
@@ -63,6 +69,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
   void dispose() {
     _accountState.removeListener(_onAccountChanged);
     _currencyState.removeListener(_onCurrencyChanged);
+    _themeState.removeListener(_onThemeChanged);
     _transactionService.removeListener(_onTransactionChanged);
     super.dispose();
   }
@@ -82,6 +89,12 @@ class _PortfolioContentState extends State<PortfolioContent> {
       setState(() {
         // Force rebuild when currency changes
       });
+    }
+  }
+
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -179,6 +192,8 @@ class _PortfolioContentState extends State<PortfolioContent> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Column(
       children: [
         // Header
@@ -204,7 +219,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
                     Text(
                       'Portfólió',
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 22,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -219,7 +234,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
                         return Text(
                           _accountState.selectedAccount,
                           style: TextStyle(
-                            color: const Color(0xFF45556C),
+                            color: colors.textSecondary,
                             fontSize: 14,
                             fontFamily: 'Inter',
                             fontWeight: FontWeight.w500,
@@ -235,15 +250,15 @@ class _PortfolioContentState extends State<PortfolioContent> {
               ),
               // Action buttons
               IconButton(
-                icon: Icon(TablerIcons.circle_chevron_down, color: Color(0xFF1D293D)),
+                icon: Icon(TablerIcons.circle_chevron_down, color: colors.textPrimary),
                 onPressed: _showAccountChooserBottomSheet,
               ),
               IconButton(
-                icon: Icon(TablerIcons.search, color: Color(0xFF1D293D)),
+                icon: Icon(TablerIcons.search, color: colors.textPrimary),
                 onPressed: () {},
               ),
               IconButton(
-                icon: Icon(TablerIcons.speakerphone, color: Color(0xFF1D293D)),
+                icon: Icon(TablerIcons.speakerphone, color: colors.textPrimary),
                 onPressed: () {},
               ),
             ],
@@ -266,7 +281,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
+                    color: colors.surfaceElevated,
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -279,7 +294,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
                             final unrealizedProfit = portfolio.unrealizedProfitIn(_currencyState.selectedCurrency);
                             final profitPercent = portfolio.totalProfitPercent;
                             final isPositive = unrealizedProfit >= 0;
-                            final profitColor = isPositive ? const Color(0xFF007A55) : const Color(0xFFEC003F);
+                            final profitColor = isPositive ? colors.success : colors.error;
 
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,7 +302,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
                                 Text(
                                   '${_formatCurrency(totalValue)} ${_currencyState.selectedCurrency}',
                                   style: TextStyle(
-                                    color: const Color(0xFF1D293D),
+                                    color: colors.textPrimary,
                                     fontSize: 28,
                                     fontFamily: 'Inter',
                                     fontWeight: FontWeight.w500,
@@ -297,7 +312,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
                                 Text(
                                   'Nem realizált eredmény',
                                   style: TextStyle(
-                                    color: const Color(0xFF45556C),
+                                    color: colors.textSecondary,
                                     fontSize: 12,
                                     fontFamily: 'Inter',
                                     fontWeight: FontWeight.w400,
@@ -338,7 +353,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
                               decoration: BoxDecoration(
                                 border: Border.all(
                                   width: 1,
-                                  color: const Color(0xFFCAD5E2),
+                                  color: colors.border,
                                 ),
                                 borderRadius: BorderRadius.circular(4),
                               ),
@@ -349,7 +364,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
                                     child: Text(
                                       _currencyState.selectedCurrency,
                                       style: TextStyle(
-                                        color: const Color(0xFF1D293D),
+                                        color: colors.textPrimary,
                                         fontSize: 16,
                                         fontFamily: 'Inter',
                                         fontWeight: FontWeight.w400,
@@ -366,11 +381,11 @@ class _PortfolioContentState extends State<PortfolioContent> {
                             top: -8,
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 4),
-                              color: const Color(0xFFF8FAFC),
+                              color: colors.surfaceElevated,
                               child: Text(
                                 'Összesítés',
                                 style: TextStyle(
-                                  color: const Color(0xFF45556C),
+                                  color: colors.textSecondary,
                                   fontSize: 12,
                                   fontFamily: 'Inter',
                                   fontWeight: FontWeight.w400,
@@ -424,7 +439,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
                                   key: ValueKey(_chartViewIndex),
                                   textAlign: TextAlign.left,
                                   style: TextStyle(
-                                    color: const Color(0xFF1D293D),
+                                    color: colors.textPrimary,
                                     fontSize: 22,
                                     fontFamily: 'Inter',
                                     fontWeight: FontWeight.w500,
@@ -599,6 +614,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
   }
 
   Widget _buildValueChangeContent() {
+    final colors = AppColors(isDark: _themeState.isDark);
     List<HistoricalDataPoint> chartData = _getChartData();
     print('Portfolio Chart: Data points: ${chartData.length}');
 
@@ -608,7 +624,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
     double change = endValue - startValue;
     double changePercent = startValue > 0 ? (change / startValue) * 100 : 0;
     bool isPositive = change >= 0;
-    Color changeColor = isPositive ? const Color(0xFF007A55) : const Color(0xFFEC003F);
+    Color changeColor = isPositive ? colors.success : colors.error;
 
     // Convert change to selected currency
     double changeInCurrency = MarketData.convert(change, 'HUF', _currencyState.selectedCurrency);
@@ -661,6 +677,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
   }
 
   Widget _buildPeriodButton(String period) {
+    final colors = AppColors(isDark: _themeState.isDark);
     bool isSelected = _selectedPeriod == period;
 
     return Expanded(
@@ -675,7 +692,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
           decoration: BoxDecoration(
             color: isSelected ? const Color(0xFFFEF3C6) : Colors.transparent,
             border: Border.all(
-              color: isSelected ? const Color(0xFFE5C643) : const Color(0xFFCAD5E2),
+              color: isSelected ? const Color(0xFFE5C643) : colors.border,
               width: 1,
             ),
             borderRadius: BorderRadius.circular(4),
@@ -684,7 +701,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
             child: Text(
               period,
               style: TextStyle(
-                color: isSelected ? const Color(0xFF1D293D) : const Color(0xFF45556C),
+                color: isSelected ? colors.textPrimary : colors.textSecondary,
                 fontSize: 14,
                 fontFamily: 'Inter',
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
@@ -697,6 +714,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
   }
 
   Widget _buildLineChart(List<HistoricalDataPoint> chartData) {
+    final colors = AppColors(isDark: _themeState.isDark);
     if (chartData.isEmpty) {
       return Center(
         child: Text(
@@ -810,7 +828,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
           horizontalInterval: (maxValue - minValue) / 2,
           getDrawingHorizontalLine: (value) {
             return FlLine(
-              color: const Color(0xFFE2E8F0),
+              color: colors.border,
               strokeWidth: 1,
             );
           },
@@ -1393,10 +1411,11 @@ class _PortfolioContentState extends State<PortfolioContent> {
     required Color iconColor,
     bool isLast = false,
   }) {
+    final colors = AppColors(isDark: _themeState.isDark);
     // Determine color based on isPositive (null = neutral gray)
     Color getChangeColor() {
-      if (isPositive == null) return const Color(0xFF45556C);
-      return isPositive ? const Color(0xFF007A55) : const Color(0xFFEC003F);
+      if (isPositive == null) return colors.textSecondary;
+      return isPositive ? colors.success : colors.error;
     }
 
     return Container(
@@ -1406,7 +1425,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
         border: Border(
           bottom: BorderSide(
             width: isLast ? 0 : 1,
-            color: const Color(0xFFE2E8F0),
+            color: colors.border,
           ),
         ),
       ),
@@ -1431,7 +1450,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
                     Text(
                       title,
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 16,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -1441,7 +1460,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
                       amount,
                       textAlign: TextAlign.right,
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 16,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w400,
@@ -1455,7 +1474,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
                     Text(
                       percentage,
                       style: TextStyle(
-                        color: const Color(0xFF45556C),
+                        color: colors.textSecondary,
                         fontSize: 14,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w400,
@@ -1502,6 +1521,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
   }
 
   Widget _buildProductChart() {
+    final colors = AppColors(isDark: _themeState.isDark);
     return Container(
       key: const ValueKey(3),
       width: double.infinity,
@@ -1515,7 +1535,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
               Text(
                 'Termék',
                 style: TextStyle(
-                  color: const Color(0xFF1D293D),
+                  color: colors.textPrimary,
                   fontSize: 22,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w500,
@@ -1599,9 +1619,10 @@ class _PortfolioContentState extends State<PortfolioContent> {
     required Color iconColor,
     bool isLast = false,
   }) {
+    final colors = AppColors(isDark: _themeState.isDark);
     Color getChangeColor() {
-      if (isPositive == null) return const Color(0xFF45556C);
-      return isPositive ? const Color(0xFF007A55) : const Color(0xFFEC003F);
+      if (isPositive == null) return colors.textSecondary;
+      return isPositive ? colors.success : colors.error;
     }
 
     return Container(
@@ -1611,7 +1632,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
         border: Border(
           bottom: BorderSide(
             width: isLast ? 0 : 1,
-            color: const Color(0xFFE2E8F0),
+            color: colors.border,
           ),
         ),
       ),
@@ -1635,7 +1656,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
                     Text(
                       title,
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 16,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -1645,7 +1666,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
                       amount,
                       textAlign: TextAlign.right,
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 16,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w400,
@@ -1659,7 +1680,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
                     Text(
                       percentage,
                       style: TextStyle(
-                        color: const Color(0xFF45556C),
+                        color: colors.textSecondary,
                         fontSize: 14,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w400,
@@ -1706,6 +1727,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
   }
 
   Widget _buildAccountChart() {
+    final colors = AppColors(isDark: _themeState.isDark);
     return Container(
       key: const ValueKey(4),
       width: double.infinity,
@@ -1719,7 +1741,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
               Text(
                 'Számla',
                 style: TextStyle(
-                  color: const Color(0xFF1D293D),
+                  color: colors.textPrimary,
                   fontSize: 22,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w500,
@@ -1803,9 +1825,10 @@ class _PortfolioContentState extends State<PortfolioContent> {
     required Color iconColor,
     bool isLast = false,
   }) {
+    final colors = AppColors(isDark: _themeState.isDark);
     Color getChangeColor() {
-      if (isPositive == null) return const Color(0xFF45556C);
-      return isPositive ? const Color(0xFF007A55) : const Color(0xFFEC003F);
+      if (isPositive == null) return colors.textSecondary;
+      return isPositive ? colors.success : colors.error;
     }
 
     return Container(
@@ -1815,7 +1838,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
         border: Border(
           bottom: BorderSide(
             width: isLast ? 0 : 1,
-            color: const Color(0xFFE2E8F0),
+            color: colors.border,
           ),
         ),
       ),
@@ -1839,7 +1862,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
                     Text(
                       title,
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 16,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -1849,7 +1872,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
                       amount,
                       textAlign: TextAlign.right,
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 16,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w400,
@@ -1863,7 +1886,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
                     Text(
                       percentage,
                       style: TextStyle(
-                        color: const Color(0xFF45556C),
+                        color: colors.textSecondary,
                         fontSize: 14,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w400,
@@ -1919,10 +1942,11 @@ class _PortfolioContentState extends State<PortfolioContent> {
     bool isSubItem = false,
     Color? iconColor,
   }) {
+    final colors = AppColors(isDark: _themeState.isDark);
     // Determine color based on isPositive (null = neutral gray)
     Color getChangeColor() {
-      if (isPositive == null) return const Color(0xFF45556C);
-      return isPositive ? const Color(0xFF007A55) : const Color(0xFFEC003F);
+      if (isPositive == null) return colors.textSecondary;
+      return isPositive ? colors.success : colors.error;
     }
 
     return Container(
@@ -1932,7 +1956,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
         border: Border(
           bottom: BorderSide(
             width: isSubItem ? 0 : 1,
-            color: const Color(0xFFE2E8F0),
+            color: colors.border,
           ),
         ),
       ),
@@ -1960,7 +1984,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
                     Text(
                       title,
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 16,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -1970,7 +1994,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
                       amount,
                       textAlign: TextAlign.right,
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 16,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w400,
@@ -1984,7 +2008,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
                     Text(
                       percentage,
                       style: TextStyle(
-                        color: const Color(0xFF45556C),
+                        color: colors.textSecondary,
                         fontSize: 14,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w400,
@@ -2037,6 +2061,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
     String? badge,
     required VoidCallback onTap,
   }) {
+    final colors = AppColors(isDark: _themeState.isDark);
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -2051,7 +2076,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
               child: Text(
                 title,
                 style: TextStyle(
-                  color: const Color(0xFF1D293D),
+                  color: colors.textPrimary,
                   fontSize: 22,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w500,
@@ -2069,7 +2094,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
                 child: Text(
                   badge,
                   style: TextStyle(
-                    color: const Color(0xFF1D293D),
+                    color: colors.textPrimary,
                     fontSize: 14,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w500,
@@ -2078,7 +2103,7 @@ class _PortfolioContentState extends State<PortfolioContent> {
               ),
             SizedBox(width: 4),
             IconButton(
-              icon: Icon(Icons.chevron_right, color: Color(0xFF45556C)),
+              icon: Icon(Icons.chevron_right, color: colors.textSecondary),
               onPressed: onTap,
             ),
           ],

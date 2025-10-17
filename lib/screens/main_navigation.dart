@@ -4,6 +4,9 @@ import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'portfolio_page.dart';
 import 'kedvencek_page.dart';
 import 'news_page.dart';
+import 'settings_page.dart';
+import '../state/theme_state.dart' as app_theme;
+import '../theme/app_colors.dart';
 
 class MainNavigation extends StatefulWidget {
   final int initialPage;
@@ -17,6 +20,7 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   late int _selectedIndex;
   late PageController _pageController;
+  final app_theme.ThemeState _themeState = app_theme.ThemeState();
 
   // Az egyes oldalak listája - Note: removed const to allow state updates
   late final List<Widget> _pages;
@@ -26,25 +30,35 @@ class _MainNavigationState extends State<MainNavigation> {
     super.initState();
     _selectedIndex = widget.initialPage;
     _pageController = PageController(initialPage: _selectedIndex);
+    _themeState.addListener(_onThemeChanged);
     _pages = [
       PortfolioContent(),
       KedvencekContent(),
       NewsContent(),
       PlaceholderPage(title: 'Tőzsde'),
-      PlaceholderPage(title: 'Több'),
+      const SettingsPage(),
     ];
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _themeState.removeListener(_onThemeChanged);
     super.dispose();
+  }
+
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: SafeArea(
         bottom: false,
         child: PageView(
@@ -57,17 +71,17 @@ class _MainNavigationState extends State<MainNavigation> {
           children: _pages,
         ),
       ),
-      bottomNavigationBar: _buildBottomNavBar(),
+      bottomNavigationBar: _buildBottomNavBar(colors),
     );
   }
 
-  Widget _buildBottomNavBar() {
+  Widget _buildBottomNavBar(AppColors colors) {
     return Container(
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
             width: 1,
-            color: const Color(0xFFE2E8F0),
+            color: colors.border,
           ),
         ),
       ),
@@ -75,28 +89,28 @@ class _MainNavigationState extends State<MainNavigation> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            color: Colors.white,
+            color: colors.tabBarBackground,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildBottomNavItem(0, TablerIcons.chart_pie, 'Portfólió'),
-                _buildBottomNavItem(1, TablerIcons.heart, 'Kedvencek'),
-                _buildBottomNavItem(2, TablerIcons.news, 'Hírek'),
-                _buildBottomNavItem(3, TablerIcons.trending_up, 'Tőzsde'),
-                _buildBottomNavItem(4, TablerIcons.dots, 'Több'),
+                _buildBottomNavItem(0, TablerIcons.chart_pie, 'Portfólió', colors),
+                _buildBottomNavItem(1, TablerIcons.heart, 'Kedvencek', colors),
+                _buildBottomNavItem(2, TablerIcons.news, 'Hírek', colors),
+                _buildBottomNavItem(3, TablerIcons.trending_up, 'Tőzsde', colors),
+                _buildBottomNavItem(4, TablerIcons.dots, 'Több', colors),
               ],
             ),
           ),
           Container(
             width: double.infinity,
             height: 24,
-            color: Colors.white,
+            color: colors.tabBarBackground,
             child: Center(
               child: Container(
                 width: 108,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1D293D),
+                  color: colors.textPrimary,
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
@@ -107,7 +121,7 @@ class _MainNavigationState extends State<MainNavigation> {
     );
   }
 
-  Widget _buildBottomNavItem(int index, IconData icon, String label) {
+  Widget _buildBottomNavItem(int index, IconData icon, String label, AppColors colors) {
     bool isSelected = _selectedIndex == index;
 
     return Expanded(
@@ -131,21 +145,21 @@ class _MainNavigationState extends State<MainNavigation> {
                 width: 56,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFFFEF3C6) : Colors.transparent,
+                  color: isSelected ? colors.tabBarSelected : Colors.transparent,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
                   icon,
                   size: 24,
-                  color: isSelected ? const Color(0xFFFD9A00) : const Color(0xFF45556C),
+                  color: isSelected ? colors.tabBarIconSelected : colors.tabBarIconUnselected,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
                 label,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: isSelected ? const Color(0xFF1D293D) : const Color(0xFF45556C),
+                  color: isSelected ? colors.tabBarLabelSelected : colors.tabBarLabelUnselected,
                   fontSize: 12,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w500,
@@ -160,13 +174,40 @@ class _MainNavigationState extends State<MainNavigation> {
 }
 
 // Placeholder widget a még nem elkészült oldalakhoz
-class PlaceholderPage extends StatelessWidget {
+class PlaceholderPage extends StatefulWidget {
   final String title;
 
   const PlaceholderPage({required this.title, super.key});
 
   @override
+  State<PlaceholderPage> createState() => _PlaceholderPageState();
+}
+
+class _PlaceholderPageState extends State<PlaceholderPage> {
+  final app_theme.ThemeState _themeState = app_theme.ThemeState();
+
+  @override
+  void initState() {
+    super.initState();
+    _themeState.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    _themeState.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -174,23 +215,23 @@ class PlaceholderPage extends StatelessWidget {
           Icon(
             Icons.construction,
             size: 64,
-            color: Colors.grey,
+            color: colors.textSecondary,
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
-            title,
+            widget.title,
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.grey,
+              color: colors.textPrimary,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'Ez az oldal még fejlesztés alatt áll',
             style: TextStyle(
               fontSize: 16,
-              color: Colors.grey,
+              color: colors.textSecondary,
             ),
           ),
         ],

@@ -3,12 +3,14 @@ import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import '../widgets/account_selector_bottom_sheet.dart';
 import '../state/account_state.dart';
 import '../state/currency_state.dart';
+import '../state/theme_state.dart';
+import '../theme/app_colors.dart';
 import '../data/mock_portfolio_data.dart';
 import '../data/market_stocks_data.dart';
 import '../services/transaction_service.dart';
 import 'stock_buy_page.dart';
 
-class ReszvenyInfoPage extends StatelessWidget {
+class ReszvenyInfoPage extends StatefulWidget {
   final String stockName;
   final String ticker;
 
@@ -19,27 +21,52 @@ class ReszvenyInfoPage extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<ReszvenyInfoPage> createState() => _ReszvenyInfoPageState();
+}
+
+class _ReszvenyInfoPageState extends State<ReszvenyInfoPage> {
+  final ThemeState _themeState = ThemeState();
+
+  @override
+  void initState() {
+    super.initState();
+    _themeState.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    _themeState.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: ReszvenyInfoContent(stockName: stockName, ticker: ticker),
-      bottomNavigationBar: _buildBottomNavBar(context),
+      backgroundColor: colors.background,
+      body: ReszvenyInfoContent(stockName: widget.stockName, ticker: widget.ticker),
+      bottomNavigationBar: _buildBottomNavBar(context, colors),
     );
   }
 
-  Widget _buildBottomNavBar(BuildContext context) {
+  Widget _buildBottomNavBar(BuildContext context, AppColors colors) {
     // Get stock data from market
-    MarketStock? marketStock = MarketStocksData.getByTicker(ticker);
+    MarketStock? marketStock = MarketStocksData.getByTicker(widget.ticker);
     double currentPrice = marketStock?.currentPrice ?? 0;
     String currency = marketStock?.currency ?? 'USD';
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.background,
         border: Border(
           top: BorderSide(
             width: 1,
-            color: const Color(0xFFE2E8F0),
+            color: colors.border,
           ),
         ),
       ),
@@ -57,8 +84,8 @@ class ReszvenyInfoPage extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (context) => StockBuyPage(
-                            stockName: stockName,
-                            ticker: ticker,
+                            stockName: widget.stockName,
+                            ticker: widget.ticker,
                             currentPrice: currentPrice,
                             currency: currency,
                             initialTradeType: 'Vétel',
@@ -67,7 +94,7 @@ class ReszvenyInfoPage extends StatelessWidget {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF009966),
+                      backgroundColor: colors.buttonSuccess,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(100),
@@ -100,8 +127,8 @@ class ReszvenyInfoPage extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (context) => StockBuyPage(
-                            stockName: stockName,
-                            ticker: ticker,
+                            stockName: widget.stockName,
+                            ticker: widget.ticker,
                             currentPrice: currentPrice,
                             currency: currency,
                             initialTradeType: 'Eladás',
@@ -110,7 +137,7 @@ class ReszvenyInfoPage extends StatelessWidget {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFEC003F),
+                      backgroundColor: colors.error,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(100),
@@ -142,12 +169,12 @@ class ReszvenyInfoPage extends StatelessWidget {
                   decoration: BoxDecoration(
                     border: Border.all(
                       width: 1,
-                      color: const Color(0xFFE2E8F0),
+                      color: colors.border,
                     ),
                     borderRadius: BorderRadius.circular(100),
                   ),
                   child: IconButton(
-                    icon: Icon(TablerIcons.dots_vertical, size: 24, color: Color(0xFF1D293D)),
+                    icon: Icon(TablerIcons.dots_vertical, size: 24, color: colors.textPrimary),
                     padding: EdgeInsets.zero,
                     onPressed: () {},
                   ),
@@ -158,13 +185,13 @@ class ReszvenyInfoPage extends StatelessWidget {
           Container(
             width: double.infinity,
             height: 24,
-            color: Colors.white,
+            color: colors.background,
             child: Center(
               child: Container(
                 width: 108,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1D293D),
+                  color: colors.textPrimary,
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
@@ -195,6 +222,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
   final MockPortfolioData _portfolioData = MockPortfolioData();
   final CurrencyState _currencyState = CurrencyState();
   final TransactionService _transactionService = TransactionService();
+  final ThemeState _themeState = ThemeState();
 
   @override
   void initState() {
@@ -202,6 +230,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
     _accountState.addListener(_onAccountChanged);
     _currencyState.addListener(_onCurrencyChanged);
     _transactionService.addListener(_onTransactionChanged);
+    _themeState.addListener(_onThemeChanged);
   }
 
   @override
@@ -209,6 +238,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
     _accountState.removeListener(_onAccountChanged);
     _currencyState.removeListener(_onCurrencyChanged);
     _transactionService.removeListener(_onTransactionChanged);
+    _themeState.removeListener(_onThemeChanged);
     super.dispose();
   }
 
@@ -226,6 +256,12 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
 
   void _onCurrencyChanged() {
     print('ReszvenyInfo: Currency changed to ${_currencyState.selectedCurrency}');
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  void _onThemeChanged() {
     if (mounted) {
       setState(() {});
     }
@@ -266,9 +302,10 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
   @override
   Widget build(BuildContext context) {
     final data = _getStockData();
+    final colors = AppColors(isDark: _themeState.isDark);
     final Color profitColor = data['isPositive']
-        ? const Color(0xFF007A55)
-        : const Color(0xFFEC003F);
+        ? colors.success
+        : colors.error;
 
     return SafeArea(
       child: Column(
@@ -281,7 +318,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
             child: Row(
               children: [
                 IconButton(
-                  icon: Icon(TablerIcons.arrow_left, color: Color(0xFF1D293D)),
+                  icon: Icon(TablerIcons.arrow_left, color: colors.textPrimary),
                   onPressed: () => Navigator.pop(context),
                 ),
                 SizedBox(width: 8),
@@ -293,7 +330,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                       Text(
                         widget.stockName,
                         style: TextStyle(
-                          color: const Color(0xFF1D293D),
+                          color: colors.textPrimary,
                           fontSize: 22,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -303,7 +340,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                       Text(
                         _accountState.selectedAccount,
                         style: TextStyle(
-                          color: const Color(0xFF45556C),
+                          color: colors.textSecondary,
                           fontSize: 13,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -314,11 +351,11 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(TablerIcons.circle_chevron_down, color: Color(0xFF1D293D)),
+                  icon: Icon(TablerIcons.circle_chevron_down, color: colors.textPrimary),
                   onPressed: _showAccountSelectorBottomSheet,
                 ),
                 IconButton(
-                  icon: Icon(TablerIcons.info_square_rounded, color: Color(0xFF1D293D)),
+                  icon: Icon(TablerIcons.info_square_rounded, color: colors.textPrimary),
                   onPressed: () {},
                 ),
               ],
@@ -341,7 +378,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
+                      color: colors.surfaceElevated,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -355,7 +392,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                               child: Text(
                                 '${_formatCurrency(data['totalValue'])} ${_currencyState.selectedCurrency}',
                                 style: TextStyle(
-                                  color: const Color(0xFF1D293D),
+                                  color: colors.textPrimary,
                                   fontSize: 28,
                                   fontFamily: 'Inter',
                                   fontWeight: FontWeight.w500,
@@ -367,7 +404,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                             Text(
                               '${data['totalQuantity']} db',
                               style: TextStyle(
-                                color: const Color(0xFF45556C),
+                                color: colors.textSecondary,
                                 fontSize: 16,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w500,
@@ -382,7 +419,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                             Text(
                               'Átlag bekerülés',
                               style: TextStyle(
-                                color: const Color(0xFF45556C),
+                                color: colors.textSecondary,
                                 fontSize: 12,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w400,
@@ -391,7 +428,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                             Text(
                               '${_formatCurrency(data['totalCost'])} ${_currencyState.selectedCurrency}',
                               style: TextStyle(
-                                color: const Color(0xFF45556C),
+                                color: colors.textSecondary,
                                 fontSize: 16,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w500,
@@ -409,7 +446,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                                   Text(
                                     'Nem realizált eredmény',
                                     style: TextStyle(
-                                      color: const Color(0xFF45556C),
+                                      color: colors.textSecondary,
                                       fontSize: 12,
                                       fontFamily: 'Inter',
                                       fontWeight: FontWeight.w400,
@@ -443,7 +480,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                                   Text(
                                     'Piaci / Átlag beker. ár',
                                     style: TextStyle(
-                                      color: const Color(0xFF45556C),
+                                      color: colors.textSecondary,
                                       fontSize: 12,
                                       fontFamily: 'Inter',
                                       fontWeight: FontWeight.w400,
@@ -453,7 +490,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                                   Text(
                                     '${_formatCurrency(data['currentPrice'])} ${data['currency']}',
                                     style: TextStyle(
-                                      color: const Color(0xFF45556C),
+                                      color: colors.textSecondary,
                                       fontSize: 16,
                                       fontFamily: 'Inter',
                                       fontWeight: FontWeight.w500,
@@ -462,7 +499,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                                   Text(
                                     '${_formatCurrency(data['avgPrice'])} ${data['currency']}',
                                     style: TextStyle(
-                                      color: const Color(0xFF45556C),
+                                      color: colors.textSecondary,
                                       fontSize: 16,
                                       fontFamily: 'Inter',
                                       fontWeight: FontWeight.w500,
@@ -481,10 +518,10 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
+                      color: colors.surfaceElevated,
                       border: Border(
-                        top: BorderSide(width: 1, color: const Color(0xFFE2E8F0)),
-                        bottom: BorderSide(width: 1, color: const Color(0xFFE2E8F0)),
+                        top: BorderSide(width: 1, color: colors.border),
+                        bottom: BorderSide(width: 1, color: colors.border),
                       ),
                     ),
                     child: Column(
@@ -495,7 +532,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                             Text(
                               'Számla',
                               style: TextStyle(
-                                color: const Color(0xFF45556C),
+                                color: colors.textSecondary,
                                 fontSize: 12,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w500,
@@ -506,7 +543,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                               'Teljes érték',
                               textAlign: TextAlign.right,
                               style: TextStyle(
-                                color: const Color(0xFF45556C),
+                                color: colors.textSecondary,
                                 fontSize: 12,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w500,
@@ -522,7 +559,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                             Text(
                               'Össz. darab @ átl. ár',
                               style: TextStyle(
-                                color: const Color(0xFF45556C),
+                                color: colors.textSecondary,
                                 fontSize: 12,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w500,
@@ -537,7 +574,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                                     'Eredm. %',
                                     textAlign: TextAlign.right,
                                     style: TextStyle(
-                                      color: const Color(0xFF45556C),
+                                      color: colors.textSecondary,
                                       fontSize: 12,
                                       fontFamily: 'Inter',
                                       fontWeight: FontWeight.w500,
@@ -552,7 +589,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                                     'Eredmény',
                                     textAlign: TextAlign.right,
                                     style: TextStyle(
-                                      color: const Color(0xFF45556C),
+                                      color: colors.textSecondary,
                                       fontSize: 12,
                                       fontFamily: 'Inter',
                                       fontWeight: FontWeight.w500,
@@ -579,8 +616,8 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                         final isPositive = accountProfit >= 0;
 
                         Color accountProfitColor = isPositive
-                            ? const Color(0xFF007A55)
-                            : const Color(0xFFEC003F);
+                            ? colors.success
+                            : colors.error;
 
                         return Container(
                           width: double.infinity,
@@ -589,7 +626,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                             border: Border(
                               bottom: BorderSide(
                                 width: 1,
-                                color: const Color(0xFFE2E8F0),
+                                color: colors.border,
                               ),
                             ),
                           ),
@@ -601,7 +638,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                                   Text(
                                     accountData['accountName'],
                                     style: TextStyle(
-                                      color: const Color(0xFF1D293D),
+                                      color: colors.textPrimary,
                                       fontSize: 16,
                                       fontFamily: 'Inter',
                                       fontWeight: FontWeight.w500,
@@ -611,7 +648,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                                     '${_formatCurrency(accountValue)} ${_currencyState.selectedCurrency}',
                                     textAlign: TextAlign.right,
                                     style: TextStyle(
-                                      color: const Color(0xFF1D293D),
+                                      color: colors.textPrimary,
                                       fontSize: 16,
                                       fontFamily: 'Inter',
                                       fontWeight: FontWeight.w400,
@@ -626,7 +663,7 @@ class _ReszvenyInfoContentState extends State<ReszvenyInfoContent> {
                                   Text(
                                     '${stock.quantity}db @ ${_formatCurrency(stock.avgPrice)} ${stock.currency}',
                                     style: TextStyle(
-                                      color: const Color(0xFF45556C),
+                                      color: colors.textSecondary,
                                       fontSize: 14,
                                       fontFamily: 'Inter',
                                       fontWeight: FontWeight.w400,
