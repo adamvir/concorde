@@ -7,6 +7,8 @@ import '../state/favorites_state.dart';
 import '../state/watchlist_state.dart';
 import 'product_detail_page.dart';
 import 'dart:math';
+import '../state/theme_state.dart' as app_theme;
+import '../theme/app_colors.dart';
 
 // Widget a teljes kedvencek oldalhoz (ha külön navigáció kellene)
 class KedvencekPage extends StatelessWidget {
@@ -14,8 +16,10 @@ class KedvencekPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: app_theme.ThemeState().isDark);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: SafeArea(
         bottom: false,
         child: KedvencekContent(),
@@ -35,6 +39,7 @@ class KedvencekContent extends StatefulWidget {
 class _KedvencekContentState extends State<KedvencekContent> {
   final FavoritesState _favoritesState = FavoritesState();
   final WatchlistState _watchlistState = WatchlistState();
+  final app_theme.ThemeState _themeState = app_theme.ThemeState();
   bool _isSearching = false;
   bool _isFiltering = false; // Filter mode for current watchlist
   bool _isDetailedView = false; // Toggle between simple and detailed view
@@ -50,12 +55,14 @@ class _KedvencekContentState extends State<KedvencekContent> {
     super.initState();
     _favoritesState.addListener(_onFavoritesChanged);
     _watchlistState.addListener(_onWatchlistChanged);
+    _themeState.addListener(_onThemeChanged);
   }
 
   @override
   void dispose() {
     _favoritesState.removeListener(_onFavoritesChanged);
     _watchlistState.removeListener(_onWatchlistChanged);
+    _themeState.removeListener(_onThemeChanged);
     _searchController.dispose();
     _searchFocusNode.dispose();
     _filterController.dispose();
@@ -69,6 +76,12 @@ class _KedvencekContentState extends State<KedvencekContent> {
 
   void _onWatchlistChanged() {
     setState(() {});
+  }
+
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _toggleSearch() {
@@ -159,9 +172,11 @@ class _KedvencekContentState extends State<KedvencekContent> {
 
   // Show lista selector bottom sheet (Figma design)
   void _showWatchlistSelector() {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: colors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -190,7 +205,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                     child: Text(
                       watchlist.name,
                       style: TextStyle(
-                        color: isSelected ? const Color(0xFF1D293D) : const Color(0xFF45556C),
+                        color: isSelected ? colors.textPrimary : colors.textSecondary,
                         fontSize: 14,
                         fontFamily: 'Inter',
                         fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
@@ -208,7 +223,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   border: Border(
-                    bottom: BorderSide(color: Color(0xFFE2E8F0)),
+                    bottom: BorderSide(color: colors.border),
                   ),
                 ),
               ),
@@ -224,12 +239,12 @@ class _KedvencekContentState extends State<KedvencekContent> {
                   padding: const EdgeInsets.only(left: 16, right: 24, top: 16, bottom: 16),
                   child: Row(
                     children: [
-                      Icon(TablerIcons.plus, size: 24, color: Color(0xFF45556C)),
+                      Icon(TablerIcons.plus, size: 24, color: colors.textSecondary),
                       const SizedBox(width: 12),
                       Text(
                         'Új lista létrehozása...',
                         style: TextStyle(
-                          color: const Color(0xFF45556C),
+                          color: colors.textSecondary,
                           fontSize: 14,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -252,16 +267,18 @@ class _KedvencekContentState extends State<KedvencekContent> {
 
   // Show list menu (kedvencek menu) - triggered by + button
   void _showListMenu() {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: colors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
         return Container(
           decoration: ShapeDecoration(
-            color: Colors.white,
+            color: colors.surface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(24),
@@ -322,7 +339,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                           side: BorderSide(
                             width: 1,
                             strokeAlign: BorderSide.strokeAlignCenter,
-                            color: const Color(0xFFE2E8F0),
+                            color: colors.border,
                           ),
                         ),
                       ),
@@ -350,7 +367,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                               child: Icon(
                                 TablerIcons.plus,
                                 size: 24,
-                                color: Color(0xFF45556C),
+                                color: colors.textSecondary,
                               ),
                             ),
                             SizedBox(width: 12),
@@ -359,7 +376,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                               child: Text(
                                 'Új lista létrehozása...',
                                 style: TextStyle(
-                                  color: const Color(0xFF45556C),
+                                  color: colors.textSecondary,
                                   fontSize: 14,
                                   fontFamily: 'Inter',
                                   fontWeight: FontWeight.w500,
@@ -388,6 +405,8 @@ class _KedvencekContentState extends State<KedvencekContent> {
     required String title,
     required VoidCallback onTap,
   }) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -418,7 +437,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                       child: Icon(
                         icon,
                         size: 24,
-                        color: Color(0xFF45556C),
+                        color: colors.textSecondary,
                       ),
                     ),
                     SizedBox(width: 12),
@@ -427,7 +446,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                       child: Text(
                         title,
                         style: TextStyle(
-                          color: const Color(0xFF45556C),
+                          color: colors.textSecondary,
                           fontSize: 14,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -479,6 +498,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
 
   // Show rename list dialog
   void _showRenameListDialog() {
+    final colors = AppColors(isDark: _themeState.isDark);
     final currentList = _watchlistState.selectedWatchlist;
     if (currentList == null) return;
 
@@ -489,7 +509,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: Colors.white,
+        backgroundColor: colors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28),
         ),
@@ -511,7 +531,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                       child: Text(
                         'Lista átnevezése',
                         style: TextStyle(
-                          color: const Color(0xFF1D293D),
+                          color: colors.textPrimary,
                           fontSize: 24,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w400,
@@ -528,8 +548,8 @@ class _KedvencekContentState extends State<KedvencekContent> {
                         autofocus: true,
                         decoration: InputDecoration(
                           labelText: 'Lista neve',
-                          labelStyle: const TextStyle(
-                            color: Color(0xFF45556C),
+                          labelStyle: TextStyle(
+                            color: colors.textSecondary,
                             fontSize: 12,
                             fontFamily: 'Inter',
                             fontWeight: FontWeight.w400,
@@ -538,23 +558,23 @@ class _KedvencekContentState extends State<KedvencekContent> {
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(4),
-                            borderSide: const BorderSide(
+                            borderSide: BorderSide(
                               width: 1,
-                              color: Color(0xFFCAD5E2),
+                              color: colors.border,
                             ),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(4),
-                            borderSide: const BorderSide(
+                            borderSide: BorderSide(
                               width: 1,
-                              color: Color(0xFFCAD5E2),
+                              color: colors.border,
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(4),
-                            borderSide: const BorderSide(
+                            borderSide: BorderSide(
                               width: 2,
-                              color: Color(0xFF1D293D),
+                              color: colors.textPrimary,
                             ),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
@@ -562,8 +582,8 @@ class _KedvencekContentState extends State<KedvencekContent> {
                             vertical: 16,
                           ),
                         ),
-                        style: const TextStyle(
-                          color: Color(0xFF1D293D),
+                        style: TextStyle(
+                          color: colors.textPrimary,
                           fontSize: 16,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w400,
@@ -597,10 +617,10 @@ class _KedvencekContentState extends State<KedvencekContent> {
                           vertical: 10,
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Mégse',
                         style: TextStyle(
-                          color: Color(0xFF1D293D),
+                          color: colors.textPrimary,
                           fontSize: 14,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -624,14 +644,14 @@ class _KedvencekContentState extends State<KedvencekContent> {
                             SnackBar(
                               content: Text(
                                 'Lista átnevezve: $newName',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
                                   fontFamily: 'Inter',
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
-                              backgroundColor: const Color(0xFF1D293D),
+                              backgroundColor: colors.textPrimary,
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -650,10 +670,10 @@ class _KedvencekContentState extends State<KedvencekContent> {
                           vertical: 10,
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Mentés',
                         style: TextStyle(
-                          color: Color(0xFF1D293D),
+                          color: colors.textPrimary,
                           fontSize: 14,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -674,13 +694,14 @@ class _KedvencekContentState extends State<KedvencekContent> {
 
   // Show delete list confirmation dialog (Figma design)
   void _showDeleteListDialog() {
+    final colors = AppColors(isDark: _themeState.isDark);
     final currentList = _watchlistState.selectedWatchlist;
     if (currentList == null) return;
 
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: Colors.white,
+        backgroundColor: colors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28),
         ),
@@ -706,7 +727,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                         child: Text(
                           'Lista törlése',
                           style: TextStyle(
-                            color: const Color(0xFF1D293D),
+                            color: colors.textPrimary,
                             fontSize: 24,
                             fontFamily: 'Inter',
                             fontWeight: FontWeight.w400,
@@ -721,7 +742,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                         child: Text(
                           'Biztosan törlöd a "${currentList.name}" listát?',
                           style: TextStyle(
-                            color: const Color(0xFF45556C),
+                            color: colors.textSecondary,
                             fontSize: 14,
                             fontFamily: 'Inter',
                             fontWeight: FontWeight.w400,
@@ -757,10 +778,10 @@ class _KedvencekContentState extends State<KedvencekContent> {
                             vertical: 10,
                           ),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Mégse',
                           style: TextStyle(
-                            color: Color(0xFF1D293D),
+                            color: colors.textPrimary,
                             fontSize: 14,
                             fontFamily: 'Inter',
                             fontWeight: FontWeight.w500,
@@ -781,14 +802,14 @@ class _KedvencekContentState extends State<KedvencekContent> {
                             SnackBar(
                               content: Text(
                                 'Lista törölve: $deletedListName',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
                                   fontFamily: 'Inter',
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
-                              backgroundColor: const Color(0xFF1D293D),
+                              backgroundColor: colors.textPrimary,
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -806,10 +827,10 @@ class _KedvencekContentState extends State<KedvencekContent> {
                             vertical: 10,
                           ),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Törlöm a listát',
                           style: TextStyle(
-                            color: Color(0xFF1D293D),
+                            color: colors.textPrimary,
                             fontSize: 14,
                             fontFamily: 'Inter',
                             fontWeight: FontWeight.w500,
@@ -831,12 +852,13 @@ class _KedvencekContentState extends State<KedvencekContent> {
 
   // Show add lista dialog (Figma design)
   void _showAddWatchlistDialog() {
+    final colors = AppColors(isDark: _themeState.isDark);
     final TextEditingController nameController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: Colors.white,
+        backgroundColor: colors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28),
         ),
@@ -855,12 +877,12 @@ class _KedvencekContentState extends State<KedvencekContent> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Title
-                    const SizedBox(
+                    SizedBox(
                       width: 264,
                       child: Text(
                         'Új lista létrehozása',
                         style: TextStyle(
-                          color: Color(0xFF1D293D),
+                          color: colors.textPrimary,
                           fontSize: 24,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w400,
@@ -877,8 +899,8 @@ class _KedvencekContentState extends State<KedvencekContent> {
                         autofocus: true,
                         decoration: InputDecoration(
                           labelText: 'Lista neve',
-                          labelStyle: const TextStyle(
-                            color: Color(0xFF45556C),
+                          labelStyle: TextStyle(
+                            color: colors.textSecondary,
                             fontSize: 12,
                             fontFamily: 'Inter',
                             fontWeight: FontWeight.w400,
@@ -886,22 +908,22 @@ class _KedvencekContentState extends State<KedvencekContent> {
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(4),
-                            borderSide: const BorderSide(
-                              color: Color(0xFFCAD5E2),
+                            borderSide: BorderSide(
+                              color: colors.border,
                               width: 1,
                             ),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(4),
-                            borderSide: const BorderSide(
-                              color: Color(0xFFCAD5E2),
+                            borderSide: BorderSide(
+                              color: colors.border,
                               width: 1,
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(4),
-                            borderSide: const BorderSide(
-                              color: Color(0xFF1D293D),
+                            borderSide: BorderSide(
+                              color: colors.textPrimary,
                               width: 2,
                             ),
                           ),
@@ -910,8 +932,8 @@ class _KedvencekContentState extends State<KedvencekContent> {
                             vertical: 16,
                           ),
                         ),
-                        style: const TextStyle(
-                          color: Color(0xFF1D293D),
+                        style: TextStyle(
+                          color: colors.textPrimary,
                           fontSize: 16,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w400,
@@ -945,10 +967,10 @@ class _KedvencekContentState extends State<KedvencekContent> {
                           vertical: 10,
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Mégse',
                         style: TextStyle(
-                          color: Color(0xFF1D293D),
+                          color: colors.textPrimary,
                           fontSize: 14,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -970,14 +992,14 @@ class _KedvencekContentState extends State<KedvencekContent> {
                             SnackBar(
                               content: Text(
                                 'Létrehoztál egy listát: $newListName',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
                                   fontFamily: 'Inter',
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
-                              backgroundColor: const Color(0xFF1D293D),
+                              backgroundColor: colors.textPrimary,
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -996,10 +1018,10 @@ class _KedvencekContentState extends State<KedvencekContent> {
                           vertical: 10,
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Mentés',
                         style: TextStyle(
-                          color: Color(0xFF1D293D),
+                          color: colors.textPrimary,
                           fontSize: 14,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -1021,6 +1043,8 @@ class _KedvencekContentState extends State<KedvencekContent> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     // Get stocks from current watchlist instead of global favorites
     final currentWatchlistTickers = _watchlistState.selectedWatchlistTickers;
     var favoriteStocks = currentWatchlistTickers
@@ -1062,7 +1086,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                   child: Text(
                     'Kedvencek',
                     style: TextStyle(
-                      color: const Color(0xFF1D293D),
+                      color: colors.textPrimary,
                       fontSize: 22,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,
@@ -1075,12 +1099,12 @@ class _KedvencekContentState extends State<KedvencekContent> {
                     height: 48,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
+                      color: colors.surfaceElevated,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.search, color: Color(0xFF45556C), size: 20),
+                        Icon(Icons.search, color: colors.textSecondary, size: 20),
                         SizedBox(width: 8),
                         Expanded(
                           child: TextField(
@@ -1090,14 +1114,14 @@ class _KedvencekContentState extends State<KedvencekContent> {
                             decoration: InputDecoration(
                               hintText: 'Keresés részvények között...',
                               hintStyle: TextStyle(
-                                color: const Color(0xFF94A3B8),
+                                color: colors.textTertiary,
                                 fontSize: 16,
                                 fontFamily: 'Inter',
                               ),
                               border: InputBorder.none,
                             ),
                             style: TextStyle(
-                              color: const Color(0xFF1D293D),
+                              color: colors.textPrimary,
                               fontSize: 16,
                               fontFamily: 'Inter',
                             ),
@@ -1109,7 +1133,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                               _searchController.clear();
                               _onSearchChanged('');
                             },
-                            child: Icon(Icons.clear, color: Color(0xFF45556C), size: 20),
+                            child: Icon(Icons.clear, color: colors.textSecondary, size: 20),
                           ),
                       ],
                     ),
@@ -1118,12 +1142,12 @@ class _KedvencekContentState extends State<KedvencekContent> {
               IconButton(
                 icon: Icon(
                   _isSearching ? TablerIcons.x : TablerIcons.search,
-                  color: Color(0xFF1D293D),
+                  color: colors.textPrimary,
                 ),
                 onPressed: _toggleSearch,
               ),
               IconButton(
-                icon: Icon(TablerIcons.speakerphone, color: Color(0xFF1D293D)),
+                icon: Icon(TablerIcons.speakerphone, color: colors.textPrimary),
                 onPressed: () {
                   // TODO: Show notifications/announcements
                 },
@@ -1138,12 +1162,12 @@ class _KedvencekContentState extends State<KedvencekContent> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: colors.surfaceElevated,
             ),
             child: Text(
               '${_searchResults.length} találat${_searchResults.length >= 50 ? ' (első 50)' : ''}',
               style: TextStyle(
-                color: const Color(0xFF45556C),
+                color: colors.textSecondary,
                 fontSize: 14,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w500,
@@ -1181,13 +1205,13 @@ class _KedvencekContentState extends State<KedvencekContent> {
                   Icon(
                     Icons.search_off,
                     size: 64,
-                    color: Color(0xFFCAD5E2),
+                    color: colors.border,
                   ),
                   SizedBox(height: 16),
                   Text(
                     'Nincs találat',
                     style: TextStyle(
-                      color: const Color(0xFF45556C),
+                      color: colors.textSecondary,
                       fontSize: 18,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,
@@ -1197,7 +1221,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                   Text(
                     'Próbálj meg más keresési kifejezést',
                     style: TextStyle(
-                      color: const Color(0xFF94A3B8),
+                      color: colors.textTertiary,
                       fontSize: 14,
                       fontFamily: 'Inter',
                     ),
@@ -1216,13 +1240,13 @@ class _KedvencekContentState extends State<KedvencekContent> {
                   Icon(
                     Icons.search,
                     size: 64,
-                    color: Color(0xFFCAD5E2),
+                    color: colors.border,
                   ),
                   SizedBox(height: 16),
                   Text(
                     'Keress az 1000 részvény között',
                     style: TextStyle(
-                      color: const Color(0xFF45556C),
+                      color: colors.textSecondary,
                       fontSize: 18,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,
@@ -1232,7 +1256,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                   Text(
                     'Ticker vagy cégnév alapján',
                     style: TextStyle(
-                      color: const Color(0xFF94A3B8),
+                      color: colors.textTertiary,
                       fontSize: 14,
                       fontFamily: 'Inter',
                     ),
@@ -1257,7 +1281,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                       decoration: BoxDecoration(
                         border: Border.all(
                           width: 1,
-                          color: const Color(0xFFCAD5E2),
+                          color: colors.border,
                         ),
                         borderRadius: BorderRadius.circular(4),
                       ),
@@ -1267,29 +1291,29 @@ class _KedvencekContentState extends State<KedvencekContent> {
                             child: Text(
                               _watchlistState.selectedWatchlist?.name ?? 'Első',
                               style: TextStyle(
-                                color: const Color(0xFF1D293D),
+                                color: colors.textPrimary,
                                 fontSize: 16,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
                           ),
-                          Icon(TablerIcons.chevron_down, size: 24, color: Color(0xFF1D293D)),
+                          Icon(TablerIcons.chevron_down, size: 24, color: colors.textPrimary),
                         ],
                       ),
                     ),
                   ),
                 ),
                 IconButton(
-                  icon: Icon(TablerIcons.plus, size: 24, color: Color(0xFF1D293D)),
+                  icon: Icon(TablerIcons.plus, size: 24, color: colors.textPrimary),
                   onPressed: () => _showListMenu(),
                 ),
                 IconButton(
-                  icon: Icon(TablerIcons.filter, size: 24, color: Color(0xFF1D293D)),
+                  icon: Icon(TablerIcons.filter, size: 24, color: colors.textPrimary),
                   onPressed: _toggleFilter,
                 ),
                 IconButton(
-                  icon: Icon(TablerIcons.dots_vertical, size: 24, color: Color(0xFF1D293D)),
+                  icon: Icon(TablerIcons.dots_vertical, size: 24, color: colors.textPrimary),
                   onPressed: () {
                     setState(() {
                       _isDetailedView = !_isDetailedView;
@@ -1305,15 +1329,15 @@ class _KedvencekContentState extends State<KedvencekContent> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: colors.background,
                 border: Border(
-                  bottom: BorderSide(color: Color(0xFFE2E8F0)),
+                  bottom: BorderSide(color: colors.border),
                 ),
               ),
               child: Row(
                 children: [
                   IconButton(
-                    icon: Icon(TablerIcons.arrow_left, color: Color(0xFF1D293D)),
+                    icon: Icon(TablerIcons.arrow_left, color: colors.textPrimary),
                     onPressed: _toggleFilter,
                   ),
                   Expanded(
@@ -1321,12 +1345,12 @@ class _KedvencekContentState extends State<KedvencekContent> {
                       height: 48,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
+                        color: colors.surfaceElevated,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
                         children: [
-                          Icon(TablerIcons.search, color: Color(0xFF45556C), size: 20),
+                          Icon(TablerIcons.search, color: colors.textSecondary, size: 20),
                           SizedBox(width: 8),
                           Expanded(
                             child: TextField(
@@ -1336,14 +1360,14 @@ class _KedvencekContentState extends State<KedvencekContent> {
                               decoration: InputDecoration(
                                 hintText: 'Lista szűrése....',
                                 hintStyle: TextStyle(
-                                  color: const Color(0xFF94A3B8),
+                                  color: colors.textTertiary,
                                   fontSize: 16,
                                   fontFamily: 'Inter',
                                 ),
                                 border: InputBorder.none,
                               ),
                               style: TextStyle(
-                                color: const Color(0xFF1D293D),
+                                color: colors.textPrimary,
                                 fontSize: 16,
                                 fontFamily: 'Inter',
                               ),
@@ -1355,7 +1379,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                                 _filterController.clear();
                                 setState(() {});
                               },
-                              child: Icon(TablerIcons.x, color: Color(0xFF45556C), size: 20),
+                              child: Icon(TablerIcons.x, color: colors.textSecondary, size: 20),
                             ),
                         ],
                       ),
@@ -1370,14 +1394,14 @@ class _KedvencekContentState extends State<KedvencekContent> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: colors.surfaceElevated,
               ),
               child: Row(
                 children: [
                   Text(
                     'Ticker',
                     style: TextStyle(
-                      color: const Color(0xFF45556C),
+                      color: colors.textSecondary,
                       fontSize: 12,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,
@@ -1391,7 +1415,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                       ' Vált. %',
                       textAlign: TextAlign.right,
                       style: TextStyle(
-                        color: const Color(0xFF45556C),
+                        color: colors.textSecondary,
                         fontSize: 12,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -1405,7 +1429,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                       'Napi vált.',
                       textAlign: TextAlign.right,
                       style: TextStyle(
-                        color: const Color(0xFF45556C),
+                        color: colors.textSecondary,
                         fontSize: 12,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -1419,7 +1443,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                       'Akt. ár',
                       textAlign: TextAlign.right,
                       style: TextStyle(
-                        color: const Color(0xFF45556C),
+                        color: colors.textSecondary,
                         fontSize: 12,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -1436,7 +1460,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: colors.surfaceElevated,
               ),
               child: Row(
                 children: [
@@ -1444,7 +1468,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                     child: Text(
                       'Termék\nTőzsde   Típus   FX',
                       style: TextStyle(
-                        color: const Color(0xFF45556C),
+                        color: colors.textSecondary,
                         fontSize: 12,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -1459,7 +1483,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                       'Vált. %',
                       textAlign: TextAlign.right,
                       style: TextStyle(
-                        color: const Color(0xFF45556C),
+                        color: colors.textSecondary,
                         fontSize: 12,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -1473,7 +1497,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                       'Akt. ár\nNapi vált.',
                       textAlign: TextAlign.right,
                       style: TextStyle(
-                        color: const Color(0xFF45556C),
+                        color: colors.textSecondary,
                         fontSize: 12,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -1495,13 +1519,13 @@ class _KedvencekContentState extends State<KedvencekContent> {
                     Icon(
                       Icons.star_border,
                       size: 64,
-                      color: Color(0xFFCAD5E2),
+                      color: colors.border,
                     ),
                     SizedBox(height: 16),
                     Text(
                       'Nincs kedvenc részvény',
                       style: TextStyle(
-                        color: const Color(0xFF45556C),
+                        color: colors.textSecondary,
                         fontSize: 18,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -1511,7 +1535,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                     Text(
                       'Használd a keresőt részvények hozzáadásához',
                       style: TextStyle(
-                        color: const Color(0xFF94A3B8),
+                        color: colors.textTertiary,
                         fontSize: 14,
                         fontFamily: 'Inter',
                       ),
@@ -1565,6 +1589,8 @@ class _KedvencekContentState extends State<KedvencekContent> {
     required bool isPositive,
     bool isLast = false,
   }) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return InkWell(
       onTap: () {
         Navigator.push(
@@ -1584,7 +1610,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
           border: Border(
             bottom: BorderSide(
               width: isLast ? 0 : 1,
-              color: const Color(0xFFE2E8F0),
+              color: colors.border,
             ),
           ),
         ),
@@ -1608,7 +1634,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                   size: 24,
                   color: _watchlistState.isStockInCurrentWatchlist(stock.ticker)
                       ? const Color(0xFFFFC107)
-                      : const Color(0xFF94A3B8),
+                      : colors.textTertiary,
                 ),
               ),
             ),
@@ -1621,7 +1647,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                 Text(
                   stock.ticker,
                   style: TextStyle(
-                    color: const Color(0xFF1D293D),
+                    color: colors.textPrimary,
                     fontSize: 16,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w600,
@@ -1631,7 +1657,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                 Text(
                   stock.name,
                   style: TextStyle(
-                    color: const Color(0xFF64748B),
+                    color: colors.textSecondary,
                     fontSize: 13,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w400,
@@ -1643,7 +1669,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                 Text(
                   '${stock.exchange} • ${stock.currency}',
                   style: TextStyle(
-                    color: const Color(0xFF94A3B8),
+                    color: colors.textTertiary,
                     fontSize: 11,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w400,
@@ -1659,7 +1685,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
               Text(
                 _formatPrice(stock.currentPrice, stock.currency),
                 style: TextStyle(
-                  color: const Color(0xFF1D293D),
+                  color: colors.textPrimary,
                   fontSize: 16,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w600,
@@ -1678,8 +1704,8 @@ class _KedvencekContentState extends State<KedvencekContent> {
                   _formatChangePercent(dailyChangePercent),
                   style: TextStyle(
                     color: isPositive
-                        ? const Color(0xFF007A55)
-                        : const Color(0xFFC70036),
+                        ? colors.success
+                        : colors.error,
                     fontSize: 12,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w600,
@@ -1702,13 +1728,15 @@ class _KedvencekContentState extends State<KedvencekContent> {
     required bool isPositive,
     bool isLast = false,
   }) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Dismissible(
       key: Key(stock.ticker),
       direction: DismissDirection.endToStart, // Swipe left
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        color: const Color(0xFFEC003F),
+        color: colors.error,
         child: Icon(
           TablerIcons.trash,
           color: Colors.white,
@@ -1720,10 +1748,11 @@ class _KedvencekContentState extends State<KedvencekContent> {
         HapticFeedback.mediumImpact();
 
         // Show delete confirmation (Figma style)
+        final colors = AppColors(isDark: _themeState.isDark);
         return await showDialog<bool>(
           context: context,
           builder: (context) => Dialog(
-            backgroundColor: Colors.white,
+            backgroundColor: colors.surface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(28),
             ),
@@ -1749,7 +1778,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                             child: Text(
                               'Eltávolítás',
                               style: TextStyle(
-                                color: const Color(0xFF1D293D),
+                                color: colors.textPrimary,
                                 fontSize: 24,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w400,
@@ -1764,7 +1793,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                             child: Text(
                               'Biztosan eltávolítod a ${stock.name} részvényt a listáról?',
                               style: TextStyle(
-                                color: const Color(0xFF45556C),
+                                color: colors.textSecondary,
                                 fontSize: 14,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w400,
@@ -1800,10 +1829,10 @@ class _KedvencekContentState extends State<KedvencekContent> {
                                 vertical: 10,
                               ),
                             ),
-                            child: const Text(
+                            child: Text(
                               'Mégse',
                               style: TextStyle(
-                                color: Color(0xFF1D293D),
+                                color: colors.textPrimary,
                                 fontSize: 14,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w500,
@@ -1827,10 +1856,10 @@ class _KedvencekContentState extends State<KedvencekContent> {
                                 vertical: 10,
                               ),
                             ),
-                            child: const Text(
+                            child: Text(
                               'Eltávolítás',
                               style: TextStyle(
-                                color: Color(0xFF1D293D),
+                                color: colors.textPrimary,
                                 fontSize: 14,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w500,
@@ -1864,7 +1893,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                 fontWeight: FontWeight.w400,
               ),
             ),
-            backgroundColor: const Color(0xFF1D293D),
+            backgroundColor: colors.textPrimary,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
@@ -1906,7 +1935,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                               child: Text(
                                 'Eltávolítás',
                                 style: TextStyle(
-                                  color: const Color(0xFF1D293D),
+                                  color: colors.textPrimary,
                                   fontSize: 24,
                                   fontFamily: 'Inter',
                                   fontWeight: FontWeight.w400,
@@ -1921,7 +1950,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                               child: Text(
                                 'Biztosan eltávolítod a ${stock.name} részvényt a listáról?',
                                 style: TextStyle(
-                                  color: const Color(0xFF45556C),
+                                  color: colors.textSecondary,
                                   fontSize: 14,
                                   fontFamily: 'Inter',
                                   fontWeight: FontWeight.w400,
@@ -1957,10 +1986,10 @@ class _KedvencekContentState extends State<KedvencekContent> {
                                   vertical: 10,
                                 ),
                               ),
-                              child: const Text(
+                              child: Text(
                                 'Mégse',
                                 style: TextStyle(
-                                  color: Color(0xFF1D293D),
+                                  color: colors.textPrimary,
                                   fontSize: 14,
                                   fontFamily: 'Inter',
                                   fontWeight: FontWeight.w500,
@@ -1988,7 +2017,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                                         fontWeight: FontWeight.w400,
                                       ),
                                     ),
-                                    backgroundColor: const Color(0xFF1D293D),
+                                    backgroundColor: colors.textPrimary,
                                     behavior: SnackBarBehavior.floating,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8),
@@ -2006,10 +2035,10 @@ class _KedvencekContentState extends State<KedvencekContent> {
                                   vertical: 10,
                                 ),
                               ),
-                              child: const Text(
+                              child: Text(
                                 'Eltávolítás',
                                 style: TextStyle(
-                                  color: Color(0xFF1D293D),
+                                  color: colors.textPrimary,
                                   fontSize: 14,
                                   fontFamily: 'Inter',
                                   fontWeight: FontWeight.w500,
@@ -2046,7 +2075,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
             border: Border(
               bottom: BorderSide(
                 width: isLast ? 0 : 1,
-                color: const Color(0xFFE2E8F0),
+                color: colors.border,
               ),
             ),
           ),
@@ -2055,7 +2084,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
               Text(
                 stock.ticker,
                 style: TextStyle(
-                  color: const Color(0xFF1D293D),
+                  color: colors.textPrimary,
                   fontSize: 16,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w500,
@@ -2069,8 +2098,8 @@ class _KedvencekContentState extends State<KedvencekContent> {
                   textAlign: TextAlign.right,
                   style: TextStyle(
                     color: isPositive
-                        ? const Color(0xFF007A55)
-                        : const Color(0xFFEC003F),
+                        ? colors.success
+                        : colors.error,
                     fontSize: 16,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w400,
@@ -2084,8 +2113,8 @@ class _KedvencekContentState extends State<KedvencekContent> {
                   textAlign: TextAlign.right,
                   style: TextStyle(
                     color: isPositive
-                        ? const Color(0xFF007A55)
-                        : const Color(0xFFEC003F),
+                        ? colors.success
+                        : colors.error,
                     fontSize: 16,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w400,
@@ -2098,7 +2127,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                   currentPrice,
                   textAlign: TextAlign.right,
                   style: TextStyle(
-                    color: const Color(0xFF1D293D),
+                    color: colors.textPrimary,
                     fontSize: 16,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w400,
@@ -2121,13 +2150,15 @@ class _KedvencekContentState extends State<KedvencekContent> {
     required bool isPositive,
     bool isLast = false,
   }) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Dismissible(
       key: Key('detailed_${stock.ticker}'),
       direction: DismissDirection.endToStart, // Swipe left
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        color: const Color(0xFFEC003F),
+        color: colors.error,
         child: Icon(
           TablerIcons.trash,
           color: Colors.white,
@@ -2139,10 +2170,11 @@ class _KedvencekContentState extends State<KedvencekContent> {
         HapticFeedback.mediumImpact();
 
         // Show delete confirmation (Figma style)
+        final colors = AppColors(isDark: _themeState.isDark);
         return await showDialog<bool>(
           context: context,
           builder: (context) => Dialog(
-            backgroundColor: Colors.white,
+            backgroundColor: colors.surface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(28),
             ),
@@ -2168,7 +2200,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                             child: Text(
                               'Eltávolítás',
                               style: TextStyle(
-                                color: const Color(0xFF1D293D),
+                                color: colors.textPrimary,
                                 fontSize: 24,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w400,
@@ -2183,7 +2215,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                             child: Text(
                               'Biztosan eltávolítod a ${stock.name} részvényt a listáról?',
                               style: TextStyle(
-                                color: const Color(0xFF45556C),
+                                color: colors.textSecondary,
                                 fontSize: 14,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w400,
@@ -2219,10 +2251,10 @@ class _KedvencekContentState extends State<KedvencekContent> {
                                 vertical: 10,
                               ),
                             ),
-                            child: const Text(
+                            child: Text(
                               'Mégse',
                               style: TextStyle(
-                                color: Color(0xFF1D293D),
+                                color: colors.textPrimary,
                                 fontSize: 14,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w500,
@@ -2246,10 +2278,10 @@ class _KedvencekContentState extends State<KedvencekContent> {
                                 vertical: 10,
                               ),
                             ),
-                            child: const Text(
+                            child: Text(
                               'Eltávolítás',
                               style: TextStyle(
-                                color: Color(0xFF1D293D),
+                                color: colors.textPrimary,
                                 fontSize: 14,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w500,
@@ -2283,7 +2315,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                 fontWeight: FontWeight.w400,
               ),
             ),
-            backgroundColor: const Color(0xFF1D293D),
+            backgroundColor: colors.textPrimary,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
@@ -2298,10 +2330,11 @@ class _KedvencekContentState extends State<KedvencekContent> {
         HapticFeedback.mediumImpact();
 
         // Show delete confirmation (Figma style)
+        final colors = AppColors(isDark: _themeState.isDark);
         showDialog(
           context: context,
           builder: (context) => Dialog(
-            backgroundColor: Colors.white,
+            backgroundColor: colors.surface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(28),
             ),
@@ -2327,7 +2360,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                             child: Text(
                               'Eltávolítás',
                               style: TextStyle(
-                                color: const Color(0xFF1D293D),
+                                color: colors.textPrimary,
                                 fontSize: 24,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w400,
@@ -2342,7 +2375,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                             child: Text(
                               'Biztosan eltávolítod a ${stock.name} részvényt a listáról?',
                               style: TextStyle(
-                                color: const Color(0xFF45556C),
+                                color: colors.textSecondary,
                                 fontSize: 14,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w400,
@@ -2378,10 +2411,10 @@ class _KedvencekContentState extends State<KedvencekContent> {
                                 vertical: 10,
                               ),
                             ),
-                            child: const Text(
+                            child: Text(
                               'Mégse',
                               style: TextStyle(
-                                color: Color(0xFF1D293D),
+                                color: colors.textPrimary,
                                 fontSize: 14,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w500,
@@ -2402,14 +2435,14 @@ class _KedvencekContentState extends State<KedvencekContent> {
                                 SnackBar(
                                   content: Text(
                                     'Eltávolítva "$listName" listából',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 16,
                                       fontFamily: 'Inter',
                                       fontWeight: FontWeight.w400,
                                     ),
                                   ),
-                                  backgroundColor: const Color(0xFF1D293D),
+                                  backgroundColor: colors.textPrimary,
                                   behavior: SnackBarBehavior.floating,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
@@ -2427,10 +2460,10 @@ class _KedvencekContentState extends State<KedvencekContent> {
                                 vertical: 10,
                               ),
                             ),
-                            child: const Text(
+                            child: Text(
                               'Eltávolítás',
                               style: TextStyle(
-                                color: Color(0xFF1D293D),
+                                color: colors.textPrimary,
                                 fontSize: 14,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w500,
@@ -2467,7 +2500,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
           border: Border(
             bottom: BorderSide(
               width: isLast ? 0 : 1,
-              color: const Color(0xFFE2E8F0),
+              color: colors.border,
             ),
           ),
         ),
@@ -2485,7 +2518,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                         child: Text(
                           stock.name,
                           style: TextStyle(
-                            color: const Color(0xFF1D293D),
+                            color: colors.textPrimary,
                             fontSize: 16,
                             fontFamily: 'Inter',
                             fontWeight: FontWeight.w500,
@@ -2510,7 +2543,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Color(0xFFEC003F),
+                              color: colors.error,
                               borderRadius: BorderRadius.circular(2),
                             ),
                             child: Text(
@@ -2530,7 +2563,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Color(0xFF009966),
+                              color: colors.success,
                               borderRadius: BorderRadius.circular(2),
                             ),
                             child: Text(
@@ -2551,7 +2584,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                   Text(
                     '${stock.exchange}   Részv.   ${stock.currency}',
                     style: TextStyle(
-                      color: const Color(0xFF64748B),
+                      color: colors.textSecondary,
                       fontSize: 13,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w400,
@@ -2568,8 +2601,8 @@ class _KedvencekContentState extends State<KedvencekContent> {
                 textAlign: TextAlign.right,
                 style: TextStyle(
                   color: isPositive
-                      ? const Color(0xFF007A55)
-                      : const Color(0xFFEC003F),
+                      ? colors.success
+                      : colors.error,
                   fontSize: 16,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w400,
@@ -2586,7 +2619,7 @@ class _KedvencekContentState extends State<KedvencekContent> {
                     currentPrice,
                     textAlign: TextAlign.right,
                     style: TextStyle(
-                      color: const Color(0xFF1D293D),
+                      color: colors.textPrimary,
                       fontSize: 16,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w400,
@@ -2598,8 +2631,8 @@ class _KedvencekContentState extends State<KedvencekContent> {
                     textAlign: TextAlign.right,
                     style: TextStyle(
                       color: isPositive
-                          ? const Color(0xFF007A55)
-                          : const Color(0xFFEC003F),
+                          ? colors.success
+                          : colors.error,
                       fontSize: 14,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w400,
@@ -2633,12 +2666,14 @@ class _AddFavoriteToListPage extends StatefulWidget {
 class _AddFavoriteToListPageState extends State<_AddFavoriteToListPage> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+  final app_theme.ThemeState _themeState = app_theme.ThemeState();
   List<MarketStock> _searchResults = [];
 
   @override
   void initState() {
     super.initState();
     widget.watchlistState.addListener(_onWatchlistChanged);
+    _themeState.addListener(_onThemeChanged);
     // Auto-focus search on page load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _searchFocusNode.requestFocus();
@@ -2648,6 +2683,7 @@ class _AddFavoriteToListPageState extends State<_AddFavoriteToListPage> {
   @override
   void dispose() {
     widget.watchlistState.removeListener(_onWatchlistChanged);
+    _themeState.removeListener(_onThemeChanged);
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
@@ -2655,6 +2691,12 @@ class _AddFavoriteToListPageState extends State<_AddFavoriteToListPage> {
 
   void _onWatchlistChanged() {
     setState(() {});
+  }
+
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _onSearchChanged(String query) {
@@ -2673,11 +2715,13 @@ class _AddFavoriteToListPageState extends State<_AddFavoriteToListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     // Get current list stocks to show checkmarks
     final currentListTickers = widget.watchlistState.selectedWatchlistTickers;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -2689,7 +2733,7 @@ class _AddFavoriteToListPageState extends State<_AddFavoriteToListPage> {
                 children: [
                   // Back button
                   IconButton(
-                    icon: Icon(TablerIcons.arrow_left, color: Color(0xFF1D293D)),
+                    icon: Icon(TablerIcons.arrow_left, color: colors.textPrimary),
                     onPressed: () => Navigator.pop(context),
                   ),
                   SizedBox(width: 8),
@@ -2702,7 +2746,7 @@ class _AddFavoriteToListPageState extends State<_AddFavoriteToListPage> {
                         Text(
                           'Kedvenc hozzáadása',
                           style: TextStyle(
-                            color: const Color(0xFF1D293D),
+                            color: colors.textPrimary,
                             fontSize: 22,
                             fontFamily: 'Inter',
                             fontWeight: FontWeight.w500,
@@ -2712,7 +2756,7 @@ class _AddFavoriteToListPageState extends State<_AddFavoriteToListPage> {
                         Text(
                           widget.listName,
                           style: TextStyle(
-                            color: const Color(0xFF45556C),
+                            color: colors.textSecondary,
                             fontSize: 14,
                             fontFamily: 'Inter',
                             fontWeight: FontWeight.w500,
@@ -2748,7 +2792,7 @@ class _AddFavoriteToListPageState extends State<_AddFavoriteToListPage> {
                         shape: RoundedRectangleBorder(
                           side: BorderSide(
                             width: 1,
-                            color: const Color(0xFFCAD5E2),
+                            color: colors.border,
                           ),
                           borderRadius: BorderRadius.circular(4),
                         ),
@@ -2761,7 +2805,7 @@ class _AddFavoriteToListPageState extends State<_AddFavoriteToListPage> {
                             child: Icon(
                               TablerIcons.search,
                               size: 24,
-                              color: Color(0xFF45556C),
+                              color: colors.textSecondary,
                             ),
                           ),
                           Expanded(
@@ -2772,7 +2816,7 @@ class _AddFavoriteToListPageState extends State<_AddFavoriteToListPage> {
                               decoration: InputDecoration(
                                 hintText: 'Termék keresése...',
                                 hintStyle: TextStyle(
-                                  color: const Color(0xFF45556C),
+                                  color: colors.textSecondary,
                                   fontSize: 16,
                                   fontFamily: 'Inter',
                                   fontWeight: FontWeight.w400,
@@ -2782,7 +2826,7 @@ class _AddFavoriteToListPageState extends State<_AddFavoriteToListPage> {
                                 border: InputBorder.none,
                               ),
                               style: TextStyle(
-                                color: const Color(0xFF1D293D),
+                                color: colors.textPrimary,
                                 fontSize: 16,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w400,
@@ -2808,13 +2852,13 @@ class _AddFavoriteToListPageState extends State<_AddFavoriteToListPage> {
                           Icon(
                             TablerIcons.search,
                             size: 64,
-                            color: Color(0xFFCAD5E2),
+                            color: colors.border,
                           ),
                           SizedBox(height: 16),
                           Text(
                             'Keress részvényeket',
                             style: TextStyle(
-                              color: const Color(0xFF45556C),
+                              color: colors.textSecondary,
                               fontSize: 18,
                               fontFamily: 'Inter',
                               fontWeight: FontWeight.w500,
@@ -2831,13 +2875,13 @@ class _AddFavoriteToListPageState extends State<_AddFavoriteToListPage> {
                               Icon(
                                 TablerIcons.search_off,
                                 size: 64,
-                                color: Color(0xFFCAD5E2),
+                                color: colors.border,
                               ),
                               SizedBox(height: 16),
                               Text(
                                 'Nincs találat',
                                 style: TextStyle(
-                                  color: const Color(0xFF45556C),
+                                  color: colors.textSecondary,
                                   fontSize: 18,
                                   fontFamily: 'Inter',
                                   fontWeight: FontWeight.w500,
@@ -2872,7 +2916,7 @@ class _AddFavoriteToListPageState extends State<_AddFavoriteToListPage> {
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1D293D),
+                    backgroundColor: colors.textPrimary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(100),
                     ),
@@ -2909,13 +2953,15 @@ class _AddFavoriteToListPageState extends State<_AddFavoriteToListPage> {
     required bool isInList,
     required bool isLast,
   }) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Container(
       width: double.infinity,
       decoration: ShapeDecoration(
         shape: RoundedRectangleBorder(
           side: BorderSide(
             width: 1,
-            color: const Color(0xFFE2E8F0),
+            color: colors.border,
           ),
         ),
       ),
@@ -2930,7 +2976,7 @@ class _AddFavoriteToListPageState extends State<_AddFavoriteToListPage> {
                   Text(
                     stock.name,
                     style: TextStyle(
-                      color: const Color(0xFF1D293D),
+                      color: colors.textPrimary,
                       fontSize: 16,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,
@@ -2944,7 +2990,7 @@ class _AddFavoriteToListPageState extends State<_AddFavoriteToListPage> {
                   Text(
                     '${stock.exchange}   Részv.   ${stock.currency}',
                     style: TextStyle(
-                      color: const Color(0xFF45556C),
+                      color: colors.textSecondary,
                       fontSize: 14,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w400,
@@ -2964,7 +3010,7 @@ class _AddFavoriteToListPageState extends State<_AddFavoriteToListPage> {
               icon: Icon(
                 isInList ? TablerIcons.circle_check_filled : TablerIcons.circle_plus,
                 size: 24,
-                color: isInList ? const Color(0xFF009966) : const Color(0xFF45556C),
+                color: isInList ? colors.success : colors.textSecondary,
               ),
               onPressed: () {
                 final listName = widget.watchlistState.selectedWatchlist?.name ?? 'Első';
@@ -2982,7 +3028,7 @@ class _AddFavoriteToListPageState extends State<_AddFavoriteToListPage> {
                           fontWeight: FontWeight.w400,
                         ),
                       ),
-                      backgroundColor: const Color(0xFF1D293D),
+                      backgroundColor: colors.textPrimary,
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -3004,7 +3050,7 @@ class _AddFavoriteToListPageState extends State<_AddFavoriteToListPage> {
                           fontWeight: FontWeight.w400,
                         ),
                       ),
-                      backgroundColor: const Color(0xFF1D293D),
+                      backgroundColor: colors.textPrimary,
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -3035,15 +3081,19 @@ class _ReorderListPage extends StatefulWidget {
 }
 
 class _ReorderListPageState extends State<_ReorderListPage> {
+  final app_theme.ThemeState _themeState = app_theme.ThemeState();
+
   @override
   void initState() {
     super.initState();
     widget.watchlistState.addListener(_onWatchlistChanged);
+    _themeState.addListener(_onThemeChanged);
   }
 
   @override
   void dispose() {
     widget.watchlistState.removeListener(_onWatchlistChanged);
+    _themeState.removeListener(_onThemeChanged);
     super.dispose();
   }
 
@@ -3051,8 +3101,15 @@ class _ReorderListPageState extends State<_ReorderListPage> {
     setState(() {});
   }
 
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
     final currentListTickers = widget.watchlistState.selectedWatchlistTickers;
     final stocks = currentListTickers
         .map((ticker) => MarketStocksData.getStockByTicker(ticker))
@@ -3061,7 +3118,7 @@ class _ReorderListPageState extends State<_ReorderListPage> {
         .toList();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -3074,7 +3131,7 @@ class _ReorderListPageState extends State<_ReorderListPage> {
                 children: [
                   // Back button
                   IconButton(
-                    icon: Icon(TablerIcons.arrow_left, color: Color(0xFF1D293D)),
+                    icon: Icon(TablerIcons.arrow_left, color: colors.textPrimary),
                     onPressed: () => Navigator.pop(context),
                   ),
                   SizedBox(width: 8),
@@ -3083,7 +3140,7 @@ class _ReorderListPageState extends State<_ReorderListPage> {
                     child: Text(
                       'Lista átrendezése',
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 22,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -3101,7 +3158,7 @@ class _ReorderListPageState extends State<_ReorderListPage> {
                       child: Text(
                         'Nincs elem a listában',
                         style: TextStyle(
-                          color: const Color(0xFF45556C),
+                          color: colors.textSecondary,
                           fontSize: 16,
                           fontFamily: 'Inter',
                         ),
@@ -3129,14 +3186,14 @@ class _ReorderListPageState extends State<_ReorderListPage> {
                               scale: scale,
                               child: Material(
                                 elevation: elevation,
-                                color: Colors.white,
+                                color: colors.surface,
                                 borderRadius: BorderRadius.circular(8),
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF8FAFC),
+                                    color: colors.surfaceElevated,
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
-                                      color: const Color(0xFFE2E8F0),
+                                      color: colors.border,
                                       width: 1,
                                     ),
                                   ),
@@ -3165,7 +3222,7 @@ class _ReorderListPageState extends State<_ReorderListPage> {
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1D293D),
+                  backgroundColor: colors.textPrimary,
                   minimumSize: Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(100),
@@ -3202,6 +3259,8 @@ class _ReorderListPageState extends State<_ReorderListPage> {
     required MarketStock stock,
     required bool isLast,
   }) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Container(
       key: key,
       width: double.infinity,
@@ -3209,7 +3268,7 @@ class _ReorderListPageState extends State<_ReorderListPage> {
         border: Border(
           bottom: BorderSide(
             width: 1,
-            color: const Color(0xFFE2E8F0),
+            color: colors.border,
           ),
         ),
       ),
@@ -3222,7 +3281,7 @@ class _ReorderListPageState extends State<_ReorderListPage> {
             child: Icon(
               TablerIcons.grip_vertical,
               size: 24,
-              color: Color(0xFF45556C),
+              color: colors.textSecondary,
             ),
           ),
           SizedBox(width: 4),
@@ -3233,7 +3292,7 @@ class _ReorderListPageState extends State<_ReorderListPage> {
               child: Text(
                 stock.name,
                 style: TextStyle(
-                  color: const Color(0xFF1D293D),
+                  color: colors.textPrimary,
                   fontSize: 16,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w500,
@@ -3253,14 +3312,15 @@ class _ReorderListPageState extends State<_ReorderListPage> {
               icon: Icon(
                 TablerIcons.x,
                 size: 24,
-                color: Color(0xFF45556C),
+                color: colors.textSecondary,
               ),
               onPressed: () {
                 // Show delete confirmation (Figma style)
+                final colors = AppColors(isDark: _themeState.isDark);
                 showDialog(
                   context: context,
                   builder: (context) => Dialog(
-                    backgroundColor: Colors.white,
+                    backgroundColor: colors.surface,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),
@@ -3286,7 +3346,7 @@ class _ReorderListPageState extends State<_ReorderListPage> {
                                     child: Text(
                                       'Eltávolítás',
                                       style: TextStyle(
-                                        color: const Color(0xFF1D293D),
+                                        color: colors.textPrimary,
                                         fontSize: 24,
                                         fontFamily: 'Inter',
                                         fontWeight: FontWeight.w400,
@@ -3301,7 +3361,7 @@ class _ReorderListPageState extends State<_ReorderListPage> {
                                     child: Text(
                                       'Biztosan eltávolítod a ${stock.name} részvényt a listáról?',
                                       style: TextStyle(
-                                        color: const Color(0xFF45556C),
+                                        color: colors.textSecondary,
                                         fontSize: 14,
                                         fontFamily: 'Inter',
                                         fontWeight: FontWeight.w400,
@@ -3337,10 +3397,10 @@ class _ReorderListPageState extends State<_ReorderListPage> {
                                         vertical: 10,
                                       ),
                                     ),
-                                    child: const Text(
+                                    child: Text(
                                       'Mégse',
                                       style: TextStyle(
-                                        color: Color(0xFF1D293D),
+                                        color: colors.textPrimary,
                                         fontSize: 14,
                                         fontFamily: 'Inter',
                                         fontWeight: FontWeight.w500,
@@ -3368,7 +3428,7 @@ class _ReorderListPageState extends State<_ReorderListPage> {
                                               fontWeight: FontWeight.w400,
                                             ),
                                           ),
-                                          backgroundColor: const Color(0xFF1D293D),
+                                          backgroundColor: colors.textPrimary,
                                           behavior: SnackBarBehavior.floating,
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(8),
@@ -3386,10 +3446,10 @@ class _ReorderListPageState extends State<_ReorderListPage> {
                                         vertical: 10,
                                       ),
                                     ),
-                                    child: const Text(
+                                    child: Text(
                                       'Eltávolítás',
                                       style: TextStyle(
-                                        color: Color(0xFF1D293D),
+                                        color: colors.textPrimary,
                                         fontSize: 14,
                                         fontFamily: 'Inter',
                                         fontWeight: FontWeight.w500,
@@ -3434,6 +3494,7 @@ class _LongPressableStockRow extends StatefulWidget {
 
 class _LongPressableStockRowState extends State<_LongPressableStockRow>
     with SingleTickerProviderStateMixin {
+  final app_theme.ThemeState _themeState = app_theme.ThemeState();
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _elevationAnimation;
@@ -3476,6 +3537,8 @@ class _LongPressableStockRowState extends State<_LongPressableStockRow>
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return GestureDetector(
       onTap: widget.onTap,
       onLongPressStart: _handleLongPressStart,
@@ -3493,7 +3556,7 @@ class _LongPressableStockRowState extends State<_LongPressableStockRow>
               child: Container(
                 decoration: BoxDecoration(
                   color: _controller.value > 0
-                      ? const Color(0xFFF8FAFC)
+                      ? colors.surfaceElevated
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                 ),

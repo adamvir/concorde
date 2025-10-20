@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/mock_portfolio_data.dart';
+import '../state/theme_state.dart' as app_theme;
+import '../theme/app_colors.dart';
 
 class AccountSelectorBottomSheet extends StatefulWidget {
   final String selectedAccount;
@@ -18,11 +20,25 @@ class AccountSelectorBottomSheet extends StatefulWidget {
 class _AccountSelectorBottomSheetState extends State<AccountSelectorBottomSheet> {
   late String _currentSelection;
   final MockPortfolioData _portfolioData = MockPortfolioData();
+  final app_theme.ThemeState _themeState = app_theme.ThemeState();
 
   @override
   void initState() {
     super.initState();
     _currentSelection = widget.selectedAccount;
+    _themeState.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    _themeState.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   String _formatValue(double value) {
@@ -52,9 +68,11 @@ class _AccountSelectorBottomSheetState extends State<AccountSelectorBottomSheet>
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
@@ -80,7 +98,7 @@ class _AccountSelectorBottomSheetState extends State<AccountSelectorBottomSheet>
                     child: Text(
                       'Számla',
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 22,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -89,7 +107,7 @@ class _AccountSelectorBottomSheetState extends State<AccountSelectorBottomSheet>
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.close, color: Color(0xFF1D293D)),
+                  icon: Icon(Icons.close, color: colors.textPrimary),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -115,7 +133,7 @@ class _AccountSelectorBottomSheetState extends State<AccountSelectorBottomSheet>
                     height: 56,
                     margin: const EdgeInsets.only(bottom: 4),
                     decoration: BoxDecoration(
-                      color: isSelected ? const Color(0xFFFEF3C6) : Colors.transparent,
+                      color: isSelected ? (_themeState.isDark ? colors.accentDark : colors.accent) : Colors.transparent,
                       borderRadius: BorderRadius.circular(100),
                     ),
                     child: Padding(
@@ -126,7 +144,7 @@ class _AccountSelectorBottomSheetState extends State<AccountSelectorBottomSheet>
                           Text(
                             account['name']!,
                             style: TextStyle(
-                              color: const Color(0xFF1D293D),
+                              color: colors.textPrimary,
                               fontSize: 14,
                               fontFamily: 'Inter',
                               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
@@ -137,7 +155,7 @@ class _AccountSelectorBottomSheetState extends State<AccountSelectorBottomSheet>
                             account['value']!,
                             textAlign: TextAlign.right,
                             style: TextStyle(
-                              color: isSelected ? const Color(0xFF1D293D) : const Color(0xFF45556C),
+                              color: isSelected ? colors.textPrimary : colors.textSecondary,
                               fontSize: 14,
                               fontFamily: 'Inter',
                               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,

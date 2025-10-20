@@ -4,6 +4,7 @@ import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'portfolio_page.dart';
 import 'kedvencek_page.dart';
 import 'news_page.dart';
+import 'tozsde_page.dart';
 import 'settings_page.dart';
 import '../state/theme_state.dart' as app_theme;
 import '../theme/app_colors.dart';
@@ -35,7 +36,7 @@ class _MainNavigationState extends State<MainNavigation> {
       PortfolioContent(),
       KedvencekContent(),
       NewsContent(),
-      PlaceholderPage(title: 'Tőzsde'),
+      TozsdeContent(),
       const SettingsPage(),
     ];
   }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../state/theme_state.dart' as app_theme;
+import '../theme/app_colors.dart';
 
 class PhoneNumberBottomSheet extends StatefulWidget {
   const PhoneNumberBottomSheet({super.key});
@@ -9,12 +11,32 @@ class PhoneNumberBottomSheet extends StatefulWidget {
 
 class _PhoneNumberBottomSheetState extends State<PhoneNumberBottomSheet> {
   String selectedPhoneNumber = '0670****398';
+  final app_theme.ThemeState _themeState = app_theme.ThemeState();
+
+  @override
+  void initState() {
+    super.initState();
+    _themeState.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    _themeState.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
     return Container(
       decoration: ShapeDecoration(
-        color: Colors.white,
+        color: colors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(24),
@@ -42,7 +64,7 @@ class _PhoneNumberBottomSheetState extends State<PhoneNumberBottomSheet> {
                     child: Text(
                       'Telefonszám hitelesíthez',
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 22,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -52,7 +74,7 @@ class _PhoneNumberBottomSheetState extends State<PhoneNumberBottomSheet> {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.close, color: Color(0xFF1D293D)),
+                  icon: Icon(Icons.close, color: colors.textPrimary),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -78,7 +100,7 @@ class _PhoneNumberBottomSheetState extends State<PhoneNumberBottomSheet> {
                     height: 56,
                     decoration: ShapeDecoration(
                       color: selectedPhoneNumber == '0670****398'
-                          ? const Color(0xFFFEF3C6)
+                          ? (_themeState.isDark ? colors.accentDark : colors.accent)
                           : Colors.transparent,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(100),
@@ -90,7 +112,7 @@ class _PhoneNumberBottomSheetState extends State<PhoneNumberBottomSheet> {
                         Text(
                           '0670****398',
                           style: TextStyle(
-                            color: const Color(0xFF1D293D),
+                            color: colors.textPrimary,
                             fontSize: 14,
                             fontFamily: 'Inter',
                             fontWeight: selectedPhoneNumber == '0670****398'
@@ -117,7 +139,7 @@ class _PhoneNumberBottomSheetState extends State<PhoneNumberBottomSheet> {
                     height: 56,
                     decoration: ShapeDecoration(
                       color: selectedPhoneNumber == '0670****123'
-                          ? const Color(0xFFFEF3C6)
+                          ? (_themeState.isDark ? colors.accentDark : colors.accent)
                           : Colors.transparent,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(100),
@@ -129,7 +151,7 @@ class _PhoneNumberBottomSheetState extends State<PhoneNumberBottomSheet> {
                         Text(
                           '0670****123',
                           style: TextStyle(
-                            color: const Color(0xFF45556C),
+                            color: selectedPhoneNumber == '0670****123' ? colors.textPrimary : colors.textSecondary,
                             fontSize: 14,
                             fontFamily: 'Inter',
                             fontWeight: selectedPhoneNumber == '0670****123'

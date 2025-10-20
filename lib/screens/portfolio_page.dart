@@ -2130,18 +2130,34 @@ class AccountSelectorBottomSheet extends StatefulWidget {
 
 class _AccountSelectorBottomSheetState extends State<AccountSelectorBottomSheet> {
   late String _currentSelection;
+  final app_theme.ThemeState _themeState = app_theme.ThemeState();
 
   @override
   void initState() {
     super.initState();
     _currentSelection = widget.selectedView;
+    _themeState.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    _themeState.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
@@ -2167,7 +2183,7 @@ class _AccountSelectorBottomSheetState extends State<AccountSelectorBottomSheet>
                     child: Text(
                       'Portfólió',
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 22,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -2196,26 +2212,32 @@ class _AccountSelectorBottomSheetState extends State<AccountSelectorBottomSheet>
                 _buildOptionItem(
                   context,
                   'Értékváltozás',
+                  colors,
                 ),
                 _buildOptionItem(
                   context,
                   'Eszközosztály',
+                  colors,
                 ),
                 _buildOptionItem(
                   context,
                   'Termék',
+                  colors,
                 ),
                 _buildOptionItem(
                   context,
                   'Számla',
+                  colors,
                 ),
                 _buildOptionItem(
                   context,
                   'Devizakitettség',
+                  colors,
                 ),
                 _buildOptionItem(
                   context,
                   'Szolgáltatás',
+                  colors,
                 ),
               ],
             ),
@@ -2229,6 +2251,7 @@ class _AccountSelectorBottomSheetState extends State<AccountSelectorBottomSheet>
   Widget _buildOptionItem(
     BuildContext context,
     String title,
+    AppColors colors,
   ) {
     final bool isSelected = title == _currentSelection;
 
@@ -2257,8 +2280,8 @@ class _AccountSelectorBottomSheetState extends State<AccountSelectorBottomSheet>
                   title,
                   style: TextStyle(
                     color: isSelected
-                        ? const Color(0xFF1D293D)
-                        : const Color(0xFF45556C),
+                        ? colors.textPrimary
+                        : colors.textSecondary,
                     fontSize: 14,
                     fontFamily: 'Inter',
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
@@ -2292,18 +2315,34 @@ class CurrencySelectorBottomSheet extends StatefulWidget {
 
 class _CurrencySelectorBottomSheetState extends State<CurrencySelectorBottomSheet> {
   late String _currentSelection;
+  final app_theme.ThemeState _themeState = app_theme.ThemeState();
 
   @override
   void initState() {
     super.initState();
     _currentSelection = widget.selectedCurrency;
+    _themeState.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    _themeState.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors(isDark: _themeState.isDark);
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
@@ -2329,7 +2368,7 @@ class _CurrencySelectorBottomSheetState extends State<CurrencySelectorBottomShee
                     child: Text(
                       'Összesítés devizaneme',
                       style: TextStyle(
-                        color: const Color(0xFF1D293D),
+                        color: colors.textPrimary,
                         fontSize: 22,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -2355,9 +2394,9 @@ class _CurrencySelectorBottomSheetState extends State<CurrencySelectorBottomShee
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Column(
               children: [
-                _buildCurrencyOption(context, 'HUF'),
-                _buildCurrencyOption(context, 'EUR'),
-                _buildCurrencyOption(context, 'USD'),
+                _buildCurrencyOption(context, 'HUF', colors),
+                _buildCurrencyOption(context, 'EUR', colors),
+                _buildCurrencyOption(context, 'USD', colors),
               ],
             ),
           ),
@@ -2367,7 +2406,7 @@ class _CurrencySelectorBottomSheetState extends State<CurrencySelectorBottomShee
     );
   }
 
-  Widget _buildCurrencyOption(BuildContext context, String currency) {
+  Widget _buildCurrencyOption(BuildContext context, String currency, AppColors colors) {
     final bool isSelected = currency == _currentSelection;
 
     return InkWell(
@@ -2388,7 +2427,7 @@ class _CurrencySelectorBottomSheetState extends State<CurrencySelectorBottomShee
         child: Text(
           currency,
           style: TextStyle(
-            color: isSelected ? const Color(0xFF1D293D) : const Color(0xFF45556C),
+            color: isSelected ? colors.textPrimary : colors.textSecondary,
             fontSize: 14,
             fontFamily: 'Inter',
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
